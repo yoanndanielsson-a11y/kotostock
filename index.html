@@ -144,7 +144,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .topbar h2{font-size:18px;margin:0}
 .top-right{display:flex;align-items:center;gap:14px}
 
-/* NOUVEAU STATUT DU COMPTE */
+/* STATUT DU COMPTE */
 .status-pill{
   display:inline-flex;
   align-items:center;
@@ -653,6 +653,10 @@ let sales = [];
 let dashboardData = {};
 let currentPage = "dashboard";
 
+/* SYNCHRONISATION */
+let refreshInProgress = false;
+let syncTimer = null;
+
 const money = value =>
   new Intl.NumberFormat("fr-FR").format(Number(value || 0)) + " FCFA";
 
@@ -717,8 +721,13 @@ async function apiRequest(path,options={}){
   try{data=await response.json()}catch(e){}
 
   if(!response.ok || data.success===false){
-    throw new Error(data.message || "Une erreur est survenue. Réessayez.");
+    const error=new Error(
+      data.message || "Une erreur est survenue. Réessayez."
+    );
+    error.status=response.status;
+    throw error;
   }
+
   return data;
 }
 
@@ -786,10 +795,16 @@ document.getElementById("registerForm").addEventListener("submit",async event=>{
 });
 
 async function logout(){
+  stopAutoSync();
+
   try{await apiRequest("/logout",{method:"POST"})}catch(error){}
   currentUser=null;
+  currentShop=null;
+  currentSubscription=null;
   products=[];
   sales=[];
+  dashboardData={};
+
   document.getElementById("appPage").classList.add("hidden");
   document.getElementById("authPage").classList.remove("hidden");
   document.getElementById("loginForm").reset();
@@ -801,6 +816,7 @@ async function checkSession(){
   try{
     await loadApplication();
   }catch(error){
+    stopAutoSync();
     document.getElementById("authPage").classList.remove("hidden");
     document.getElementById("appPage").classList.add("hidden");
   }
@@ -808,6 +824,8 @@ async function checkSession(){
 
 /* CHARGEMENT DES DONNÉES */
 async function loadApplication(){
+  stopAutoSync();
+
   const me=await apiRequest("/me");
   currentUser=me.user || {};
   currentShop=me.shop || {};
@@ -830,37 +848,111 @@ async function loadApplication(){
 
   await refreshData();
   navigate("dashboard");
+
+  startAutoSync();
 }
 
 async function refreshData(){
-  const results=await Promise.allSettled([
-    apiRequest("/products"),
-    apiRequest("/sales"),
-    apiRequest("/dashboard")
-  ]);
+  if(refreshInProgress) return;
 
-  if(results[0].status==="fulfilled"){
-    products=results[0].value.products || [];
-  }else{
-    throw results[0].reason;
+  refreshInProgress=true;
+
+  try{
+    const results=await Promise.allSettled([
+      apiRequest("/products"),
+      apiRequest("/sales"),
+      apiRequest("/dashboard")
+    ]);
+
+    if(results[0].status==="fulfilled"){
+      products=results[0].value.products || [];
+    }else{
+      throw results[0].reason;
+    }
+
+    if(results[1].status==="fulfilled"){
+      sales=results[1].value.sales || [];
+    }else{
+      sales=[];
+    }
+
+    if(results[2].status==="fulfilled"){
+      dashboardData=results[2].value;
+    }else{
+      dashboardData={};
+    }
+
+    renderAll();
+
+  }finally{
+    refreshInProgress=false;
   }
-
-  if(results[1].status==="fulfilled"){
-    sales=results[1].value.sales || [];
-  }else{
-    sales=[];
-  }
-
-  if(results[2].status==="fulfilled"){
-    dashboardData=results[2].value;
-  }else{
-    dashboardData={};
-  }
-
-  renderAll();
 }
 
-/* NOUVEL AFFICHAGE DE L'ABONNEMENT */
+/* SYNCHRONISATION ENTRE APPAREILS */
+function hasOpenModal(){
+  return ["productModal","saleModal"].some(id=>{
+    return !document.getElementById(id).classList.contains("hidden");
+  });
+}
+
+async function automaticSync(){
+  if(!currentUser) return;
+  if(document.hidden) return;
+  if(hasOpenModal()) return;
+  if(refreshInProgress) return;
+
+  try{
+    await refreshData();
+  }catch(error){
+    if(error.status===401){
+      stopAutoSync();
+
+      currentUser=null;
+      currentShop=null;
+      currentSubscription=null;
+      products=[];
+      sales=[];
+      dashboardData={};
+
+      document.getElementById("appPage").classList.add("hidden");
+      document.getElementById("authPage").classList.remove("hidden");
+
+      showMessage(
+        "authMessage",
+        "Votre session a expiré. Veuillez vous reconnecter."
+      );
+    }
+  }
+}
+
+function startAutoSync(){
+  stopAutoSync();
+
+  syncTimer=setInterval(()=>{
+    automaticSync();
+  },20000);
+}
+
+function stopAutoSync(){
+  if(syncTimer){
+    clearInterval(syncTimer);
+    syncTimer=null;
+  }
+}
+
+/* ACTUALISATION AU RETOUR SUR L'APPLICATION */
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden){
+    automaticSync();
+  }
+});
+
+window.addEventListener("focus",()=>{
+  automaticSync();
+});
+
+/* AFFICHAGE DE L'ABONNEMENT */
 function updateSubscriptionLabel(){
   const status=document.getElementById("subscriptionStatus");
 
