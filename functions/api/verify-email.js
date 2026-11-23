@@ -1,17 +1,6 @@
 
-import { getAuthenticatedUser } from "./_utils/auth.js";
-
 export async function onRequestPost(context) {
   try {
-    const auth = await getAuthenticatedUser(context);
-
-    if (!auth || !auth.user) {
-      return Response.json({
-        success: false,
-        message: "Connexion requise."
-      }, { status: 401 });
-    }
-
     const body = await context.request.json();
     const token = String(body.token || "").trim();
 
@@ -22,12 +11,12 @@ export async function onRequestPost(context) {
       }, { status: 400 });
     }
 
-    const tokenBuffer = await crypto.subtle.digest(
+    const digest = await crypto.subtle.digest(
       "SHA-256",
       new TextEncoder().encode(token)
     );
 
-    const tokenHash = Array.from(new Uint8Array(tokenBuffer))
+    const tokenHash = Array.from(new Uint8Array(digest))
       .map(byte => byte.toString(16).padStart(2, "0"))
       .join("");
 
@@ -40,7 +29,7 @@ export async function onRequestPost(context) {
         AND expires_at > CURRENT_TIMESTAMP
     `).bind(tokenHash).first();
 
-    if (!record || record.user_id !== auth.user.id) {
+    if (!record) {
       return Response.json({
         success: false,
         message: "Lien invalide ou expiré."
