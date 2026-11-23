@@ -4,804 +4,640 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KotoStock | Gestion de boutique</title>
+<title>KotoStock - Gestion intelligente</title>
 
 <style>
-:root {
-  --green: #16a085;
-  --dark: #10251f;
-  --panel: rgba(8, 24, 20, .86);
-  --white: #ffffff;
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f5f9;color:#202938}
+button,input{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+/* CONNEXION */
+#loginScreen{
+ min-height:100vh;display:flex;align-items:center;
+ justify-content:center;padding:20px;
+ background:linear-gradient(135deg,#101c36,#315b83);
 }
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  color: var(--white);
-  background: var(--dark);
+.login-card{
+ background:white;width:100%;max-width:420px;padding:30px;
+ border-radius:20px;box-shadow:0 15px 45px #0003;
 }
-
-button, input, select { font: inherit; }
-
-.app {
-  min-height: 100vh;
-  display: flex;
+.brand{text-align:center;font-size:30px;font-weight:bold;margin-bottom:8px}
+.brand span{color:#e6a900}
+.subtitle{text-align:center;color:#7b8494;font-size:13px;margin-bottom:25px}
+label{display:block;font-size:13px;font-weight:bold;margin:14px 0 7px}
+input{
+ width:100%;padding:13px;border:1px solid #dce1e9;
+ border-radius:9px;outline:none;background:white;
 }
-
-/* BARRE LATÉRALE */
-
-.sidebar {
-  width: 235px;
-  padding: 25px 17px;
-  background: #071711;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 5;
+input:focus{border-color:#315b83}
+.primary{
+ width:100%;padding:14px;border:0;border-radius:9px;
+ background:#234d78;color:white;font-weight:bold;margin-top:18px;
 }
+.primary:hover{background:#173958}
+.switch{text-align:center;margin-top:18px;font-size:13px;color:#657187}
+.switch a{color:#245b8d;cursor:pointer;font-weight:bold}
+.notice{font-size:12px;color:#858d9b;line-height:1.5;margin-top:15px}
+.message{font-size:13px;margin-top:12px;text-align:center;color:#c0392b}
 
-.logo {
-  font-size: 26px;
-  font-weight: bold;
-  color: #40dfb0;
-  margin-bottom: 40px;
+/* APPLICATION */
+#app{min-height:100vh;display:flex}
+.sidebar{
+ width:245px;background:#142238;color:white;padding:24px 16px;
+ display:flex;flex-direction:column;flex-shrink:0;
 }
-
-.logo span { color: white; }
-
-.nav-title {
-  font-size: 11px;
-  color: #8fa99f;
-  letter-spacing: 2px;
-  margin: 20px 10px 12px;
+.sidebar .brand{text-align:left;font-size:25px;padding:0 12px 25px}
+.nav-btn{
+ width:100%;border:0;background:transparent;color:#dce5f1;
+ text-align:left;padding:14px;border-radius:9px;margin:4px 0;
+ font-size:14px;
 }
-
-.nav button {
-  width: 100%;
-  padding: 14px;
-  margin-bottom: 9px;
-  border: 0;
-  border-radius: 9px;
-  color: white;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
+.nav-btn:hover,.nav-btn.active{background:#294362;color:white}
+.sidebar-bottom{margin-top:auto}
+.logout{background:#8b3434!important}
+.main{flex:1;min-width:0;padding:28px;background-size:cover;
+ background-position:center;background-attachment:fixed;position:relative}
+.main:before{
+ content:"";position:fixed;inset:0;pointer-events:none;
+ background:rgba(245,247,251,.88);z-index:0;
 }
-
-.nav button:hover,
-.nav button.active {
-  background: var(--green);
+.main>*{position:relative;z-index:1}
+.dashboard-bg{background-image:url('https://images.unsplash.com/photo-1604719312566-8912e9c8a213?auto=format&fit=crop&w=2000&q=85')}
+.products-bg{background-image:url('https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=2000&q=85')}
+.sales-bg{background-image:url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=2000&q=85')}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:25px;flex-wrap:wrap}
+.topbar h1{margin:0;font-size:26px}
+.user-label{background:white;padding:10px 14px;border-radius:9px;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}
+.stat,.panel{
+ background:#ffffffed;border-radius:14px;padding:20px;
+ box-shadow:0 5px 20px #1b35520c;
 }
-
-/* ZONE PRINCIPALE */
-
-.main {
-  flex: 1;
-  min-width: 0;
-  min-height: 100vh;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  transition: background-image .3s ease;
+.stat p{color:#758094;font-size:13px;margin:0 0 12px}
+.stat strong{font-size:25px}
+.panel{margin-bottom:20px}
+.panel h2{font-size:17px;margin:0 0 18px}
+.grid-two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.form-grid .full{grid-column:1/-1}
+.action{
+ border:0;background:#234d78;color:white;border-radius:8px;
+ padding:12px 17px;font-weight:bold;
 }
-
-/* PHOTO DASHBOARD */
-
-.main.dashboard-bg {
-  background-image:
-    linear-gradient(rgba(4,18,15,.65), rgba(4,18,15,.78)),
-    url("https://images.unsplash.com/photo-1604719312566-8912e9c8a213?auto=format&fit=crop&w=2000&q=85");
+.action:hover{background:#173958}
+.danger{background:#a33d3d}
+.secondary{background:#e9eef5;color:#26374b}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:13px 9px;border-bottom:1px solid #e9edf2}
+th{color:#758094}
+.table-wrap{overflow-x:auto}
+.empty{text-align:center;color:#8490a0;padding:25px}
+.search{max-width:320px;margin-bottom:15px}
+.small{font-size:12px;color:#788496}
+.badge{padding:5px 8px;border-radius:20px;background:#e8f1ff;color:#245b8d;font-size:11px}
+.payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.payment-option{
+ background:white;border:1px solid #dce2eb;border-radius:12px;
+ padding:17px;display:flex;align-items:center;gap:12px;
+ text-align:left;font-weight:bold;color:#26374b;
 }
-
-/* PHOTO PRODUITS */
-
-.main.products-bg {
-  background-image:
-    linear-gradient(rgba(4,18,15,.65), rgba(4,18,15,.78)),
-    url("https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=2000&q=85");
+.payment-option:hover{border-color:#234d78;background:#f4f8ff}
+.payment-logo{
+ width:42px;height:42px;border-radius:9px;display:flex;
+ align-items:center;justify-content:center;font-weight:bold;
+ font-size:13px;flex-shrink:0;
 }
-
-/* PHOTO VENTES */
-
-.main.sales-bg {
-  background-image:
-    linear-gradient(rgba(4,18,15,.65), rgba(4,18,15,.78)),
-    url("https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=2000&q=85");
+.mtn{background:#ffcc00;color:#222}
+.moov{background:#e5f0ff;color:#1754a0}
+.celtiis{background:#e8f7ed;color:#16783b}
+.bank{background:#edf0f5;color:#293d59}
+#paymentMessage{margin-top:15px;font-size:13px;color:#245b8d}
+.trial{background:#fff5d8;padding:13px;border-radius:10px;font-size:13px;margin-bottom:18px}
+@media(max-width:900px){
+ .sidebar{width:200px}
+ .stats{grid-template-columns:repeat(2,1fr)}
 }
-
-/* EN-TÊTE */
-
-header {
-  padding: 23px 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  background: rgba(5,20,17,.38);
-  border-bottom: 1px solid rgba(255,255,255,.15);
-}
-
-header h1 {
-  margin: 0;
-  font-size: 24px;
-}
-
-.header-label {
-  color: #c6d9d1;
-  font-size: 13px;
-}
-
-/* CONTENU */
-
-.content {
-  padding: 28px;
-  max-width: 1250px;
-  margin: auto;
-}
-
-.page { display: none; }
-.page.active { display: block; }
-
-.welcome { margin-bottom: 25px; }
-
-.welcome h2 {
-  font-size: 27px;
-  margin: 0 0 8px;
-}
-
-.welcome p {
-  color: #d1dfd9;
-  margin: 0;
-}
-
-/* STATISTIQUES */
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 17px;
-  margin-bottom: 25px;
-}
-
-.stat, .panel {
-  background: var(--panel);
-  border: 1px solid rgba(255,255,255,.15);
-  border-radius: 15px;
-  backdrop-filter: blur(8px);
-}
-
-.stat { padding: 22px; }
-
-.stat small { color: #c6d9d1; }
-
-.stat h2 {
-  margin: 13px 0 0;
-  font-size: 27px;
-}
-
-/* FORMULAIRES */
-
-.panel {
-  padding: 22px;
-  margin-bottom: 20px;
-}
-
-.panel h3 { margin: 0 0 18px; }
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-input, select {
-  width: 100%;
-  padding: 13px;
-  background: white;
-  color: #172a24;
-  border: 0;
-  border-radius: 8px;
-  outline: none;
-}
-
-input:focus, select:focus {
-  box-shadow: 0 0 0 3px rgba(22,160,133,.4);
-}
-
-.btn {
-  padding: 12px 17px;
-  border: 0;
-  border-radius: 8px;
-  background: var(--green);
-  color: white;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.btn:hover { filter: brightness(1.12); }
-
-.btn-danger { background: #c74747; }
-
-.btn-small {
-  padding: 8px 11px;
-  font-size: 12px;
-}
-
-/* TABLEAUX */
-
-.search {
-  max-width: 350px;
-  margin-bottom: 15px;
-}
-
-.table-wrap { overflow-x: auto; }
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 520px;
-}
-
-th, td {
-  text-align: left;
-  padding: 13px 10px;
-  border-bottom: 1px solid rgba(255,255,255,.13);
-}
-
-th {
-  color: #8ee4ca;
-  font-size: 13px;
-}
-
-td { font-size: 14px; }
-
-.empty {
-  text-align: center;
-  color: #d0ded8;
-  padding: 25px;
-}
-
-/* ÉTATS DU STOCK */
-
-.status {
-  display: inline-block;
-  padding: 5px 9px;
-  border-radius: 20px;
-  font-size: 11px;
-  background: #167c59;
-}
-
-.status.low { background: #a66a19; }
-.status.out { background: #a73535; }
-
-.alert {
-  background: rgba(166,106,25,.35);
-  border: 1px solid #d79a40;
-  border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 20px;
-}
-
-.footer {
-  text-align: center;
-  color: #c2d4ce;
-  font-size: 12px;
-  padding: 20px;
-}
-
-/* RESPONSIVE */
-
-@media(max-width: 850px) {
-  .stats { grid-template-columns: repeat(2, 1fr); }
-  .form-grid { grid-template-columns: 1fr; }
-}
-
-@media(max-width: 600px) {
-  .app { display: block; }
-
-  .sidebar {
-    width: 100%;
-    padding: 15px;
-  }
-
-  .logo { margin-bottom: 15px; }
-
-  .nav {
-    display: flex;
-    gap: 7px;
-  }
-
-  .nav-title { display: none; }
-
-  .nav button {
-    text-align: center;
-    padding: 12px 7px;
-    margin: 0;
-  }
-
-  header { padding: 17px; }
-
-  .content { padding: 16px; }
-
-  .stats { gap: 10px; }
-
-  .stat { padding: 15px; }
-
-  .stat h2 { font-size: 21px; }
-
-  .header-label { display: none; }
-
-  .main { background-attachment: scroll; }
+@media(max-width:650px){
+ #app{display:block}
+ .sidebar{width:100%;padding:12px;display:block}
+ .sidebar .brand{padding:5px 10px 10px}
+ .nav-btn{width:auto;display:inline-block;padding:10px;font-size:12px}
+ .sidebar-bottom{margin-top:8px}
+ .main{padding:17px}
+ .grid-two{grid-template-columns:1fr}
+ .form-grid{grid-template-columns:1fr}
+ .form-grid .full{grid-column:auto}
+ .payment-grid{grid-template-columns:1fr}
+ .topbar h1{font-size:21px}
 }
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<!-- CONNEXION -->
+<section id="loginScreen">
+ <div class="login-card">
+  <div class="brand">Koto<span>Stock</span></div>
+  <p class="subtitle">GESTION INTELLIGENTE DE BOUTIQUE</p>
 
-  <aside class="sidebar">
-    <div class="logo">Koto<span>Stock</span></div>
+  <div id="registerArea">
+   <h2>Créer un compte</h2>
+   <form id="registerForm">
+    <label>Nom</label>
+    <input id="regNom" required placeholder="Votre nom">
+    <label>Prénom</label>
+    <input id="regPrenom" required placeholder="Votre prénom">
+    <label>Code personnel</label>
+    <input id="regCode" type="password" minlength="4" required placeholder="Créer votre code secret">
+    <button class="primary">Créer mon compte</button>
+   </form>
+   <p class="switch">Vous avez déjà un compte ?
+    <a onclick="showLogin()">Se connecter</a>
+   </p>
+  </div>
 
-    <div class="nav-title">MENU PRINCIPAL</div>
+  <div id="loginArea" class="hidden">
+   <h2>Bienvenue !</h2>
+   <form id="loginForm">
+    <label>Nom</label>
+    <input id="loginNom" required placeholder="Votre nom">
+    <label>Prénom</label>
+    <input id="loginPrenom" required placeholder="Votre prénom">
+    <label>Code personnel</label>
+    <input id="loginCode" type="password" required placeholder="Votre code secret">
+    <button class="primary">Entrer dans KotoStock</button>
+   </form>
+   <p class="switch">Pas encore de compte ?
+    <a onclick="showRegister()">Créer un compte</a>
+   </p>
+  </div>
+  <p id="authMessage" class="message"></p>
+  <p class="notice">Version de démonstration : les comptes sont enregistrés sur ce navigateur. Pour une vraie sécurité et des comptes individuels, un serveur sera nécessaire.</p>
+ </div>
+</section>
 
-    <nav class="nav">
-      <button class="active" data-page="dashboard">⌂ Dashboard</button>
-      <button data-page="products">▣ Produits</button>
-      <button data-page="sales">▤ Ventes</button>
-    </nav>
-  </aside>
+<!-- APPLICATION -->
+<div id="app" class="hidden">
 
-  <main class="main dashboard-bg" id="main">
+ <aside class="sidebar">
+  <div class="brand">Koto<span>Stock</span></div>
 
-    <header>
-      <h1 id="pageTitle">Dashboard</h1>
-      <div class="header-label">Gestion intelligente de boutique</div>
-    </header>
+  <button class="nav-btn active" onclick="showPage('dashboard',this)">▦ Tableau de bord</button>
+  <button class="nav-btn" onclick="showPage('products',this)">▤ Produits</button>
+  <button class="nav-btn" onclick="showPage('sales',this)">▣ Ventes</button>
+  <button class="nav-btn" onclick="showPage('subscription',this)">★ Abonnement</button>
 
-    <div class="content">
+  <div class="sidebar-bottom">
+   <button class="nav-btn logout" onclick="logout()">↪ Déconnexion</button>
+  </div>
+ </aside>
 
-      <!-- DASHBOARD -->
+ <main id="mainContent" class="main dashboard-bg">
 
-      <section class="page active" id="dashboard">
+  <div class="topbar">
+   <h1 id="pageTitle">Tableau de bord</h1>
+   <div class="user-label">Utilisateur : <strong id="userName"></strong></div>
+  </div>
 
-        <div class="welcome">
-          <h2>Bienvenue sur KotoStock 👋</h2>
-          <p>Voici un aperçu de votre activité commerciale.</p>
-        </div>
+  <!-- DASHBOARD -->
+  <section id="dashboardPage">
+   <div id="trialBanner" class="trial"></div>
 
-        <div class="stats">
+   <div class="stats">
+    <div class="stat"><p>Produits enregistrés</p><strong id="statProducts">0</strong></div>
+    <div class="stat"><p>Stock total</p><strong id="statStock">0</strong></div>
+    <div class="stat"><p>Nombre de ventes</p><strong id="statSales">0</strong></div>
+    <div class="stat"><p>Chiffre d'affaires</p><strong id="statRevenue">0 FCFA</strong></div>
+   </div>
 
-          <div class="stat">
-            <small>Nombre de produits</small>
-            <h2 id="totalProducts">0</h2>
-          </div>
-
-          <div class="stat">
-            <small>Stock total</small>
-            <h2 id="totalStock">0</h2>
-          </div>
-
-          <div class="stat">
-            <small>Nombre de ventes</small>
-            <h2 id="totalSales">0</h2>
-          </div>
-
-          <div class="stat">
-            <small>Chiffre d'affaires</small>
-            <h2 id="revenue">0 F</h2>
-          </div>
-
-        </div>
-
-        <div id="lowStockAlert"></div>
-
-        <div class="panel">
-          <h3>Activité récente</h3>
-          <p id="dashboardMessage" class="empty">
-            Vos ventes apparaîtront ici.
-          </p>
-        </div>
-
-      </section>
-
-      <!-- PRODUITS -->
-
-      <section class="page" id="products">
-
-        <div class="welcome">
-          <h2>Gestion des produits</h2>
-          <p>Ajoutez et surveillez les marchandises de votre boutique.</p>
-        </div>
-
-        <div class="panel">
-          <h3>Ajouter un produit</h3>
-
-          <form id="productForm" class="form-grid">
-
-            <input id="productName"
-              placeholder="Nom du produit" required>
-
-            <input id="productPrice"
-              type="number" min="1"
-              placeholder="Prix de vente (FCFA)" required>
-
-            <input id="productQuantity"
-              type="number" min="0"
-              placeholder="Quantité en stock" required>
-
-            <button class="btn" type="submit">
-              + Ajouter le produit
-            </button>
-
-          </form>
-        </div>
-
-        <div class="panel">
-          <h3>Liste des produits</h3>
-
-          <input class="search"
-            id="productSearch"
-            placeholder="Rechercher un produit...">
-
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Produit</th>
-                  <th>Prix</th>
-                  <th>Stock</th>
-                  <th>État</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-
-              <tbody id="productTable"></tbody>
-            </table>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- VENTES -->
-
-      <section class="page" id="sales">
-
-        <div class="welcome">
-          <h2>Enregistrer une vente</h2>
-          <p>Effectuez vos ventes et suivez votre historique.</p>
-        </div>
-
-        <div class="panel">
-          <h3>Nouvelle vente</h3>
-
-          <form id="saleForm" class="form-grid">
-
-            <select id="saleProduct" required>
-              <option value="">Choisir un produit</option>
-            </select>
-
-            <input id="saleQuantity"
-              type="number" min="1"
-              placeholder="Quantité vendue" required>
-
-            <button class="btn" type="submit">
-              Valider la vente
-            </button>
-
-          </form>
-        </div>
-
-        <div class="panel">
-          <h3>Historique des ventes</h3>
-
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Produit</th>
-                  <th>Quantité</th>
-                  <th>Montant</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-
-              <tbody id="salesTable"></tbody>
-            </table>
-          </div>
-        </div>
-
-      </section>
-
+   <div class="grid-two">
+    <div class="panel">
+     <h2>Bienvenue sur KotoStock</h2>
+     <p>Gérez facilement vos produits, votre stock et vos ventes depuis un seul espace.</p>
+     <p class="small">Pensez à enregistrer chaque vente pour actualiser votre stock.</p>
     </div>
-
-    <div class="footer">
-      © 2026 KotoStock — Gestion simplifiée de votre boutique
+    <div class="panel">
+     <h2>Accès rapide</h2>
+     <button class="action" onclick="showPage('products')">Ajouter un produit</button>
+     <button class="action secondary" onclick="showPage('sales')" style="margin-left:5px">Enregistrer une vente</button>
     </div>
+   </div>
+  </section>
 
-  </main>
+  <!-- PRODUITS -->
+  <section id="productsPage" class="hidden">
+   <div class="panel">
+    <h2>Ajouter un produit</h2>
+    <form id="productForm" class="form-grid">
+     <div class="full">
+      <label>Nom du produit</label>
+      <input id="productName" required placeholder="Exemple : Riz 25 kg">
+     </div>
+     <div>
+      <label>Prix de vente (FCFA)</label>
+      <input id="productPrice" type="number" min="1" required placeholder="Prix">
+     </div>
+     <div>
+      <label>Quantité en stock</label>
+      <input id="productQty" type="number" min="0" required placeholder="Quantité">
+     </div>
+     <div class="full">
+      <button class="action">Enregistrer le produit</button>
+     </div>
+    </form>
+   </div>
+
+   <div class="panel">
+    <h2>Inventaire des produits</h2>
+    <input class="search" id="productSearch" placeholder="Rechercher un produit...">
+    <div class="table-wrap">
+     <table>
+      <thead><tr><th>Produit</th><th>Prix</th><th>Stock</th><th>Action</th></tr></thead>
+      <tbody id="productTable"></tbody>
+     </table>
+    </div>
+   </div>
+  </section>
+
+  <!-- VENTES -->
+  <section id="salesPage" class="hidden">
+   <div class="panel">
+    <h2>Enregistrer une vente</h2>
+    <form id="saleForm" class="form-grid">
+     <div class="full">
+      <label>Choisir un produit</label>
+      <select id="saleProduct" required style="width:100%;padding:13px;border:1px solid #dce1e9;border-radius:9px">
+       <option value="">Sélectionner un produit</option>
+      </select>
+     </div>
+     <div>
+      <label>Quantité vendue</label>
+      <input id="saleQty" type="number" min="1" required placeholder="Quantité">
+     </div>
+     <div class="full">
+      <button class="action">Valider la vente</button>
+     </div>
+    </form>
+   </div>
+
+   <div class="panel">
+    <h2>Historique des ventes</h2>
+    <div class="table-wrap">
+     <table>
+      <thead><tr><th>Produit</th><th>Quantité</th><th>Montant</th><th>Date</th></tr></thead>
+      <tbody id="salesTable"></tbody>
+     </table>
+    </div>
+   </div>
+  </section>
+
+  <!-- ABONNEMENT -->
+  <section id="subscriptionPage" class="hidden">
+   <div class="panel">
+    <h2>Votre abonnement KotoStock</h2>
+    <div class="trial" id="subscriptionStatus"></div>
+    <h2>Premium : 1 500 FCFA / mois</h2>
+    <p class="small">Après 3 jours d'essai gratuit.</p>
+   </div>
+
+   <div class="panel">
+    <h2>Choisissez votre moyen de paiement</h2>
+    <div class="payment-grid">
+     <button class="payment-option" onclick="choosePayment('MTN Mobile Money')">
+      <span class="payment-logo mtn">MTN</span>
+      <span>MTN Mobile Money</span>
+     </button>
+     <button class="payment-option" onclick="choosePayment('Moov Money')">
+      <span class="payment-logo moov">MOOV</span>
+      <span>Moov Money</span>
+     </button>
+     <button class="payment-option" onclick="choosePayment('Celtiis Cash')">
+      <span class="payment-logo celtiis">C</span>
+      <span>Celtiis Cash</span>
+     </button>
+     <button class="payment-option" onclick="choosePayment('Carte bancaire')">
+      <span class="payment-logo bank">VISA</span>
+      <span>Carte bancaire</span>
+     </button>
+    </div>
+    <p id="paymentMessage">Sélectionnez votre moyen de paiement.</p>
+   </div>
+  </section>
+
+ </main>
 </div>
 
 <script>
-const $ = id => document.getElementById(id);
+/* DONNEES : les anciennes clés sont conservées */
+const PRODUCTS_KEY = "kotoProducts";
+const SALES_KEY = "kotoSales";
 
-let products = JSON.parse(
-  localStorage.getItem("kotoProducts") || "[]"
-);
-
-let sales = JSON.parse(
-  localStorage.getItem("kotoSales") || "[]"
-);
-
-function saveData() {
-  localStorage.setItem("kotoProducts", JSON.stringify(products));
-  localStorage.setItem("kotoSales", JSON.stringify(sales));
+function readData(key) {
+ try {
+  const data = JSON.parse(localStorage.getItem(key) || "[]");
+  return Array.isArray(data) ? data : [];
+ } catch(e) {
+  return [];
+ }
 }
 
-function money(value) {
-  return Number(value || 0).toLocaleString("fr-FR") + " F";
+let products = readData(PRODUCTS_KEY);
+let sales = readData(SALES_KEY);
+
+function saveProducts() {
+ localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+}
+function saveSales() {
+ localStorage.setItem(SALES_KEY, JSON.stringify(sales));
 }
 
-function escapeHTML(value) {
-  return String(value).replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  })[char]);
+function stockOf(p) {
+ return Number(p.quantity ?? p.qty ?? 0);
+}
+function setStock(p, value) {
+ if ("quantity" in p) p.quantity = value;
+ else if ("qty" in p) p.qty = value;
+ else p.quantity = value;
+}
+function priceOf(p) {
+ return Number(p.price ?? 0);
+}
+function saleName(s) {
+ return s.product ?? s.name ?? "Produit";
+}
+function saleQuantity(s) {
+ return Number(s.quantity ?? s.qty ?? 0);
+}
+function saleAmount(s) {
+ return Number(s.amount ?? s.total ?? 0);
+}
+function money(n) {
+ return Number(n || 0).toLocaleString("fr-FR") + " FCFA";
 }
 
-/* NAVIGATION ET CHANGEMENT DE PHOTO */
-
-function showPage(page) {
-
-  document.querySelectorAll(".page").forEach(section => {
-    section.classList.toggle("active", section.id === page);
-  });
-
-  document.querySelectorAll(".nav button").forEach(button => {
-    button.classList.toggle(
-      "active",
-      button.dataset.page === page
-    );
-  });
-
-  const main = $("main");
-
-  main.classList.remove(
-    "dashboard-bg",
-    "products-bg",
-    "sales-bg"
-  );
-
-  main.classList.add(page + "-bg");
-
-  $("pageTitle").textContent = {
-    dashboard: "Dashboard",
-    products: "Produits",
-    sales: "Ventes"
-  }[page];
-
-  refresh();
+/* COMPTES DE DEMONSTRATION */
+function getUsers() {
+ try { return JSON.parse(localStorage.getItem("kotoUsers") || "[]"); }
+ catch(e) { return []; }
 }
+function saveUsers(users) {
+ localStorage.setItem("kotoUsers", JSON.stringify(users));
+}
+function showLogin() {
+ document.getElementById("registerArea").classList.add("hidden");
+ document.getElementById("loginArea").classList.remove("hidden");
+ document.getElementById("authMessage").textContent = "";
+}
+function showRegister() {
+ document.getElementById("loginArea").classList.add("hidden");
+ document.getElementById("registerArea").classList.remove("hidden");
+ document.getElementById("authMessage").textContent = "";
+}
+function getCurrentUser() {
+ try { return JSON.parse(sessionStorage.getItem("kotoCurrentUser") || "null"); }
+ catch(e) { return null; }
+}
+function startApp(user) {
+ sessionStorage.setItem("kotoCurrentUser", JSON.stringify(user));
+ document.getElementById("loginScreen").classList.add("hidden");
+ document.getElementById("app").classList.remove("hidden");
+ document.getElementById("userName").textContent = user.prenom + " " + user.nom;
+ updateTrial();
+ renderAll();
+}
+document.getElementById("registerForm").addEventListener("submit",function(e){
+ e.preventDefault();
+ const nom = document.getElementById("regNom").value.trim();
+ const prenom = document.getElementById("regPrenom").value.trim();
+ const code = document.getElementById("regCode").value;
+ const users = getUsers();
 
-document.querySelectorAll(".nav button").forEach(button => {
-  button.addEventListener("click", () => {
-    showPage(button.dataset.page);
-  });
+ if(code.length < 4) {
+  document.getElementById("authMessage").textContent = "Le code doit contenir au moins 4 caractères.";
+  return;
+ }
+ if(users.some(u => u.nom.toLowerCase() === nom.toLowerCase() && u.prenom.toLowerCase() === prenom.toLowerCase())) {
+  document.getElementById("authMessage").textContent = "Ce compte existe déjà. Connectez-vous.";
+  return;
+ }
+
+ const user = {nom,prenom,code};
+ users.push(user);
+ saveUsers(users);
+
+ /* Début de l'essai gratuit sur ce navigateur */
+ if(!localStorage.getItem("kotoTrialStart")) {
+  localStorage.setItem("kotoTrialStart",String(Date.now()));
+ }
+ startApp(user);
 });
 
-/* AJOUT PRODUIT */
-
-$("productForm").addEventListener("submit", event => {
-
-  event.preventDefault();
-
-  const name = $("productName").value.trim();
-  const price = Number($("productPrice").value);
-  const quantity = Number($("productQuantity").value);
-
-  if (!name || price <= 0 || quantity < 0) {
-    alert("Veuillez vérifier les informations.");
-    return;
-  }
-
-  products.push({
-    id: Date.now(),
-    name,
-    price,
-    quantity
-  });
-
-  saveData();
-  event.target.reset();
-  refresh();
-
-  alert("Produit ajouté avec succès !");
+document.getElementById("loginForm").addEventListener("submit",function(e){
+ e.preventDefault();
+ const nom = document.getElementById("loginNom").value.trim();
+ const prenom = document.getElementById("loginPrenom").value.trim();
+ const code = document.getElementById("loginCode").value;
+ const user = getUsers().find(u =>
+  u.nom.toLowerCase() === nom.toLowerCase() &&
+  u.prenom.toLowerCase() === prenom.toLowerCase() &&
+  u.code === code
+ );
+ if(!user) {
+  document.getElementById("authMessage").textContent = "Informations incorrectes.";
+  return;
+ }
+ startApp(user);
 });
 
-/* ENREGISTREMENT VENTE */
+function logout() {
+ sessionStorage.removeItem("kotoCurrentUser");
+ document.getElementById("app").classList.add("hidden");
+ document.getElementById("loginScreen").classList.remove("hidden");
+ showLogin();
+}
 
-$("saleForm").addEventListener("submit", event => {
+/* NAVIGATION */
+function showPage(page,button) {
+ const pages = ["dashboard","products","sales","subscription"];
+ pages.forEach(p => document.getElementById(p+"Page").classList.add("hidden"));
+ document.getElementById(page+"Page").classList.remove("hidden");
 
-  event.preventDefault();
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+ if(button) button.classList.add("active");
 
-  const id = Number($("saleProduct").value);
-  const quantity = Number($("saleQuantity").value);
+ const titles = {
+  dashboard:"Tableau de bord",
+  products:"Gestion des produits",
+  sales:"Gestion des ventes",
+  subscription:"Abonnement KotoStock"
+ };
+ document.getElementById("pageTitle").textContent = titles[page];
 
-  const product = products.find(
-    item => Number(item.id) === id
-  );
+ const main = document.getElementById("mainContent");
+ main.classList.remove("dashboard-bg","products-bg","sales-bg");
+ if(page==="dashboard") main.classList.add("dashboard-bg");
+ if(page==="products") main.classList.add("products-bg");
+ if(page==="sales") main.classList.add("sales-bg");
 
-  if (!product) {
-    alert("Choisissez un produit.");
-    return;
-  }
+ if(page==="sales") renderSaleOptions();
+}
 
-  if (quantity <= 0 || quantity > Number(product.quantity)) {
-    alert("Stock insuffisant ou quantité incorrecte.");
-    return;
-  }
+/* PRODUITS */
+document.getElementById("productForm").addEventListener("submit",function(e){
+ e.preventDefault();
+ const name = document.getElementById("productName").value.trim();
+ const price = Number(document.getElementById("productPrice").value);
+ const quantity = Number(document.getElementById("productQty").value);
 
-  product.quantity -= quantity;
+ if(!name || price<=0 || quantity<0) return;
 
-  sales.unshift({
-    id: Date.now(),
-    product: product.name,
-    quantity,
-    amount: quantity * Number(product.price),
-    date: new Date().toLocaleString("fr-FR")
-  });
-
-  saveData();
-  event.target.reset();
-  refresh();
-
-  alert("Vente enregistrée !");
+ products.push({
+  id:Date.now(),
+  name:name,
+  price:price,
+  quantity:quantity
+ });
+ saveProducts();
+ this.reset();
+ renderAll();
 });
-
-/* RECHERCHE */
-
-$("productSearch").addEventListener("input", refresh);
-
-/* SUPPRESSION PRODUIT */
 
 function deleteProduct(id) {
-
-  const product = products.find(
-    item => Number(item.id) === Number(id)
-  );
-
-  if (!product) return;
-
-  if (!confirm("Supprimer le produit " + product.name + " ?")) {
-    return;
-  }
-
-  products = products.filter(
-    item => Number(item.id) !== Number(id)
-  );
-
-  saveData();
-  refresh();
+ if(!confirm("Supprimer ce produit ?")) return;
+ products = products.filter(p=>String(p.id)!==String(id));
+ saveProducts();
+ renderAll();
 }
-
-/* AFFICHAGE PRODUITS */
 
 function renderProducts() {
+ const search = (document.getElementById("productSearch").value || "").toLowerCase();
+ const list = products.filter(p=>(p.name||"").toLowerCase().includes(search));
+ const tbody = document.getElementById("productTable");
 
-  const search = $("productSearch").value.toLowerCase();
+ if(!list.length) {
+  tbody.innerHTML='<tr><td colspan="4" class="empty">Aucun produit trouvé.</td></tr>';
+  return;
+ }
+ tbody.innerHTML = list.map(p=>`
+ <tr>
+  <td>${escapeHTML(p.name || "")}</td>
+  <td>${money(priceOf(p))}</td>
+  <td>${stockOf(p)}</td>
+  <td><button class="action danger" onclick="deleteProduct('${String(p.id).replace(/'/g,"")}')">Supprimer</button></td>
+ </tr>`).join("");
+}
+document.getElementById("productSearch").addEventListener("input",renderProducts);
 
-  const filtered = products.filter(product =>
-    String(product.name).toLowerCase().includes(search)
-  );
-
-  $("productTable").innerHTML = filtered.length
-    ? filtered.map(product => {
-
-        const quantity = Number(product.quantity);
-
-        const status = quantity === 0
-          ? '<span class="status out">Rupture</span>'
-          : quantity <= 5
-          ? '<span class="status low">Stock faible</span>'
-          : '<span class="status">Disponible</span>';
-
-        return `
-          <tr>
-            <td>${escapeHTML(product.name)}</td>
-            <td>${money(product.price)}</td>
-            <td>${quantity}</td>
-            <td>${status}</td>
-            <td>
-              <button class="btn btn-danger btn-small"
-                onclick="deleteProduct(${Number(product.id)})">
-                Supprimer
-              </button>
-            </td>
-          </tr>
-        `;
-
-      }).join("")
-    : '<tr><td colspan="5" class="empty">Aucun produit trouvé.</td></tr>';
-
-  $("saleProduct").innerHTML =
-    '<option value="">Choisir un produit</option>' +
-
-    products
-      .filter(product => Number(product.quantity) > 0)
-      .map(product => `
-        <option value="${Number(product.id)}">
-          ${escapeHTML(product.name)} — Stock : ${Number(product.quantity)}
-        </option>
-      `).join("");
+/* VENTES */
+function renderSaleOptions() {
+ const select = document.getElementById("saleProduct");
+ select.innerHTML = '<option value="">Sélectionner un produit</option>';
+ products.forEach(p=>{
+  select.innerHTML += `<option value="${escapeHTML(String(p.id))}">${escapeHTML(p.name)} — Stock : ${stockOf(p)}</option>`;
+ });
 }
 
-/* HISTORIQUE DES VENTES */
+document.getElementById("saleForm").addEventListener("submit",function(e){
+ e.preventDefault();
+ const id = document.getElementById("saleProduct").value;
+ const qty = Number(document.getElementById("saleQty").value);
+ const product = products.find(p=>String(p.id)===String(id));
+
+ if(!product) {
+  alert("Choisissez un produit.");
+  return;
+ }
+ if(qty<=0 || qty>stockOf(product)) {
+  alert("Quantité invalide ou stock insuffisant.");
+  return;
+ }
+
+ const amount = priceOf(product)*qty;
+ setStock(product,stockOf(product)-qty);
+
+ sales.unshift({
+  id:Date.now(),
+  product:product.name,
+  quantity:qty,
+  amount:amount,
+  date:new Date().toLocaleString("fr-FR")
+ });
+
+ saveProducts();
+ saveSales();
+ this.reset();
+ renderAll();
+ alert("Vente enregistrée !");
+});
 
 function renderSales() {
-
-  $("salesTable").innerHTML = sales.length
-
-    ? sales.map(sale => `
-        <tr>
-          <td>${escapeHTML(sale.product)}</td>
-          <td>${Number(sale.quantity)}</td>
-          <td>${money(sale.amount)}</td>
-          <td>${escapeHTML(sale.date)}</td>
-        </tr>
-      `).join("")
-
-    : '<tr><td colspan="4" class="empty">Aucune vente enregistrée.</td></tr>';
+ const tbody = document.getElementById("salesTable");
+ if(!sales.length) {
+  tbody.innerHTML='<tr><td colspan="4" class="empty">Aucune vente enregistrée.</td></tr>';
+  return;
+ }
+ tbody.innerHTML = sales.map(s=>`
+ <tr>
+  <td>${escapeHTML(saleName(s))}</td>
+  <td>${saleQuantity(s)}</td>
+  <td>${money(saleAmount(s))}</td>
+  <td>${escapeHTML(String(s.date || ""))}</td>
+ </tr>`).join("");
 }
 
-/* STATISTIQUES */
-
+/* TABLEAU DE BORD */
 function renderDashboard() {
-
-  const stock = products.reduce(
-    (sum, product) =>
-      sum + Number(product.quantity || 0), 0
-  );
-
-  const revenue = sales.reduce(
-    (sum, sale) =>
-      sum + Number(sale.amount || 0), 0
-  );
-
-  $("totalProducts").textContent = products.length;
-  $("totalStock").textContent = stock;
-  $("totalSales").textContent = sales.length;
-  $("revenue").textContent = money(revenue);
-
-  const low = products.filter(product =>
-    Number(product.quantity) <= 5
-  );
-
-  $("lowStockAlert").innerHTML = low.length
-    ? `<div class="alert">
-        ⚠️ ${low.length} produit(s) ont un stock faible ou sont en rupture.
-       </div>`
-    : "";
-
-  $("dashboardMessage").textContent = sales.length
-    ? "Dernière vente : " + sales[0].product +
-      " — " + money(sales[0].amount)
-    : "Aucune vente pour le moment.";
+ document.getElementById("statProducts").textContent = products.length;
+ document.getElementById("statStock").textContent =
+  products.reduce((sum,p)=>sum+stockOf(p),0);
+ document.getElementById("statSales").textContent = sales.length;
+ document.getElementById("statRevenue").textContent =
+  money(sales.reduce((sum,s)=>sum+saleAmount(s),0));
+}
+function renderAll() {
+ renderDashboard();
+ renderProducts();
+ renderSales();
+ renderSaleOptions();
 }
 
-/* ACTUALISATION */
-
-function refresh() {
-  renderDashboard();
-  renderProducts();
-  renderSales();
+/* ABONNEMENT ET ESSAI */
+function trialDaysLeft() {
+ const start = Number(localStorage.getItem("kotoTrialStart"));
+ if(!start) return 3;
+ const elapsed = Date.now()-start;
+ return Math.max(0,3-Math.floor(elapsed/86400000));
+}
+function updateTrial() {
+ const days = trialDaysLeft();
+ const text = days>0
+  ? "Votre essai gratuit est en cours. Il vous reste "+days+" jour(s)."
+  : "Votre période d'essai de 3 jours est terminée. Choisissez un moyen de paiement pour l'abonnement Premium.";
+ document.getElementById("trialBanner").textContent = text;
+ document.getElementById("subscriptionStatus").textContent = text;
 }
 
-refresh();
+/* PAIEMENTS : interface de sélection uniquement */
+function choosePayment(method) {
+ document.getElementById("paymentMessage").textContent =
+  method+" sélectionné pour l'abonnement de 1 500 FCFA/mois. Le paiement réel sera activé après intégration d'un prestataire et vérification sécurisée de la transaction.";
+}
+
+/* PROTECTION DES TEXTES AFFICHES */
+function escapeHTML(value) {
+ return String(value).replace(/[&<>"']/g, c => ({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+/* REOUVRIR LA SESSION SI ELLE EXISTE */
+const savedUser = getCurrentUser();
+if(savedUser) {
+ startApp(savedUser);
+}
 </script>
 
 </body>
