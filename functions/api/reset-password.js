@@ -26,25 +26,10 @@ async function hashPassword(password, salt) {
     .join("");
 }
 
-async function sha256(value) {
-  const result = await crypto.subtle.digest(
-    "SHA-256",
-    encoder.encode(value)
-  );
-
-  return Array.from(new Uint8Array(result))
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function json(data, status = 200, headers = {}) {
-  return new Response(JSON.stringify(data), {
+function json(data, status = 200) {
+  return Response.json(data, {
     status,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store",
-      ...headers
-    }
+    headers: { "Cache-Control": "no-store" }
   });
 }
 
@@ -52,37 +37,15 @@ export async function onRequestPost(context) {
   const { request, env } = context;
 
   try {
-    const contentType = request.headers.get("content-type") || "";
-
-    if (!contentType.includes("application/json")) {
-      return json({ success: false, message: "Format invalide." }, 415);
-    }
-
     const body = await request.json();
 
-    const firstName = String(body.firstName || "").trim();
-    const lastName = String(body.lastName || "").trim();
-    const email = String(body.email || "").trim().toLowerCase();
+    const token = String(body.token || "").trim();
     const password = String(body.password || "");
 
-    if (!firstName || !lastName || !email || !password) {
+    if (!token || token.length !== 64) {
       return json({
         success: false,
-        message: "Tous les champs sont obligatoires."
-      }, 400);
-    }
-
-    if (firstName.length > 80 || lastName.length > 80) {
-      return json({
-        success: false,
-        message: "Nom ou prénom trop long."
-      }, 400);
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
-      return json({
-        success: false,
-        message: "Adresse e-mail invalide."
+        message: "Lien de récupération invalide."
       }, 400);
     }
 
@@ -93,99 +56,74 @@ export async function onRequestPost(context) {
       }, 400);
     }
 
-    const existing = await env.DB
-      .prepare("SELECT id FROM users WHERE email = ?")
-      .bind(email)
-      .first();
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      encoder.encode(token)
+    );
 
-    if (existing) {
+    const tokenHash = Array.from(new Uint8Array(digest))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    const record = await env.DB.prepare(`
+      SELECT id, user_id
+      FROM account_email_tokens
+      WHERE token_hash = ?
+        AND purpose = 'reset_password'
+        AND used_at IS NULL
+        AND expires_at > CURRENT_TIMESTAMP
+    `).bind(tokenHash).first();
+
+    if (!record) {
       return json({
         success: false,
-        message: "Cette adresse e-mail est déjà utilisée."
-      }, 409);
+        message: "Lien invalide ou expiré."
+      }, 400);
     }
 
     const salt = crypto.getRandomValues(new Uint8Array(16));
-    const passwordHash = await hashPassword(password, salt);
+
     const saltHex = Array.from(salt)
       .map(b => b.toString(16).padStart(2, "0"))
       .join("");
 
+    const passwordHash = await hashPassword(password, salt);
     const storedHash = `${saltHex}:${passwordHash}`;
 
-    const userResult = await env.DB
-      .prepare(`
-        INSERT INTO users (first_name, last_name, email, password_hash)
-        VALUES (?, ?, ?, ?)
-      `)
-      .bind(firstName, lastName, email, storedHash)
-      .run();
+    await env.DB.batch([
+      env.DB.prepare(`
+        UPDATE account_email_tokens
+        SET used_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND used_at IS NULL
+      `).bind(record.id),
 
-    const userId = userResult.meta.last_row_id;
+      env.DB.prepare(`
+        UPDATE users
+        SET password_hash = ?
+        WHERE id = ?
+          AND EXISTS (
+            SELECT 1
+            FROM account_email_tokens
+            WHERE id = ?
+              AND used_at IS NOT NULL
+          )
+      `).bind(storedHash, record.user_id, record.id),
 
-    try {
-      const shopResult = await env.DB
-        .prepare("INSERT INTO shops (user_id, name) VALUES (?, ?)")
-        .bind(userId, `Boutique de ${firstName}`)
-        .run();
+      env.DB.prepare(`
+        DELETE FROM sessions
+        WHERE user_id = ?
+      `).bind(record.user_id)
+    ]);
 
-      const shopId = shopResult.meta.last_row_id;
-
-      const trialEnd = new Date(
-        Date.now() + 3 * 24 * 60 * 60 * 1000
-      ).toISOString();
-
-      await env.DB
-        .prepare(`
-          INSERT INTO subscriptions (shop_id, plan, status, trial_ends_at)
-          VALUES (?, 'trial', 'trial', ?)
-        `)
-        .bind(shopId, trialEnd)
-        .run();
-
-      const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
-      const token = Array.from(tokenBytes)
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("");
-
-      const tokenHash = await sha256(token);
-      const expiresAt = new Date(
-        Date.now() + 7 * 24 * 60 * 60 * 1000
-      ).toISOString();
-
-      await env.DB
-        .prepare(`
-          INSERT INTO sessions (user_id, token_hash, expires_at)
-          VALUES (?, ?, ?)
-        `)
-        .bind(userId, tokenHash, expiresAt)
-        .run();
-
-      return json({
-        success: true,
-        message: "Compte créé avec succès.",
-        user: {
-          firstName,
-          lastName,
-          email
-        }
-      }, 201, {
-        "Set-Cookie": `koto_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=604800`
-      });
-
-    } catch (error) {
-      await env.DB
-        .prepare("DELETE FROM users WHERE id = ?")
-        .bind(userId)
-        .run();
-
-      throw error;
-    }
+    return json({
+      success: true,
+      message: "Mot de passe modifié. Connectez-vous avec votre nouveau mot de passe."
+    });
 
   } catch (error) {
     return json({
       success: false,
-      message: "Impossible de créer le compte pour le moment."
+      message: "Une erreur est survenue."
     }, 500);
   }
 }
