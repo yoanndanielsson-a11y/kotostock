@@ -4,16 +4,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KotoStock - Gestion de boutique</title>
+<title>KotoStock | Gestion de boutique</title>
 
 <style>
 :root {
-  --primary: #16a085;
+  --green: #16a085;
   --dark: #10251f;
-  --panel: rgba(10, 25, 22, .83);
-  --text: #fff;
-  --muted: #c6d5d0;
-  --danger: #ff6464;
+  --panel: rgba(8, 24, 20, .86);
+  --white: #ffffff;
 }
 
 * { box-sizing: border-box; }
@@ -21,8 +19,8 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  color: var(--text);
-  background: #10251f;
+  color: var(--white);
+  background: var(--dark);
 }
 
 button, input, select { font: inherit; }
@@ -32,28 +30,31 @@ button, input, select { font: inherit; }
   display: flex;
 }
 
+/* BARRE LATÉRALE */
+
 .sidebar {
   width: 235px;
   padding: 25px 17px;
-  background: rgba(5, 20, 17, .96);
-  border-right: 1px solid rgba(255,255,255,.12);
+  background: #071711;
   flex-shrink: 0;
+  position: relative;
+  z-index: 5;
 }
 
 .logo {
-  font-size: 25px;
-  font-weight: 800;
-  margin-bottom: 38px;
+  font-size: 26px;
+  font-weight: bold;
   color: #40dfb0;
+  margin-bottom: 40px;
 }
 
 .logo span { color: white; }
 
 .nav-title {
-  color: #8fa9a0;
   font-size: 11px;
-  margin: 22px 10px 12px;
+  color: #8fa99f;
   letter-spacing: 2px;
+  margin: 20px 10px 12px;
 }
 
 .nav button {
@@ -61,67 +62,78 @@ button, input, select { font: inherit; }
   padding: 14px;
   margin-bottom: 9px;
   border: 0;
-  border-radius: 10px;
-  background: transparent;
+  border-radius: 9px;
   color: white;
+  background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: .2s;
 }
 
 .nav button:hover,
 .nav button.active {
-  background: #16a085;
+  background: var(--green);
 }
+
+/* ZONE PRINCIPALE */
 
 .main {
   flex: 1;
   min-width: 0;
-  position: relative;
-  isolation: isolate;
+  min-height: 100vh;
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
   background-attachment: fixed;
-  transition: background-image .3s;
+  transition: background-image .3s ease;
 }
 
-.main::before {
-  content: "";
-  position: fixed;
-  inset: 0 0 0 235px;
-  z-index: -1;
-  background: rgba(4, 18, 15, .72);
-  pointer-events: none;
-}
+/* PHOTO DASHBOARD */
 
 .main.dashboard-bg {
-  background-image: url("https://images.unsplash.com/photo-1604719312566-8912e9c8a213?auto=format&fit=crop&w=2000&q=85");
+  background-image:
+    linear-gradient(rgba(4,18,15,.65), rgba(4,18,15,.78)),
+    url("https://images.unsplash.com/photo-1604719312566-8912e9c8a213?auto=format&fit=crop&w=2000&q=85");
 }
+
+/* PHOTO PRODUITS */
 
 .main.products-bg {
-  background-image: url("https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=2000&q=85");
+  background-image:
+    linear-gradient(rgba(4,18,15,.65), rgba(4,18,15,.78)),
+    url("https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=2000&q=85");
 }
+
+/* PHOTO VENTES */
 
 .main.sales-bg {
-  background-image: url("https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=2000&q=85");
+  background-image:
+    linear-gradient(rgba(4,18,15,.65), rgba(4,18,15,.78)),
+    url("https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=2000&q=85");
 }
 
+/* EN-TÊTE */
+
 header {
-  padding: 24px 30px;
+  padding: 23px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
+  background: rgba(5,20,17,.38);
   border-bottom: 1px solid rgba(255,255,255,.15);
-  background: rgba(5,20,17,.25);
 }
 
-header h1 { margin: 0; font-size: 24px; }
+header h1 {
+  margin: 0;
+  font-size: 24px;
+}
 
 .header-label {
-  color: #b9d5cb;
+  color: #c6d9d1;
   font-size: 13px;
 }
+
+/* CONTENU */
 
 .content {
   padding: 28px;
@@ -132,12 +144,19 @@ header h1 { margin: 0; font-size: 24px; }
 .page { display: none; }
 .page.active { display: block; }
 
-.welcome {
-  margin-bottom: 25px;
+.welcome { margin-bottom: 25px; }
+
+.welcome h2 {
+  font-size: 27px;
+  margin: 0 0 8px;
 }
 
-.welcome h2 { font-size: 27px; margin: 0 0 8px; }
-.welcome p { color: var(--muted); margin: 0; }
+.welcome p {
+  color: #d1dfd9;
+  margin: 0;
+}
+
+/* STATISTIQUES */
 
 .stats {
   display: grid;
@@ -148,16 +167,27 @@ header h1 { margin: 0; font-size: 24px; }
 
 .stat, .panel {
   background: var(--panel);
-  border: 1px solid rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.15);
   border-radius: 15px;
-  backdrop-filter: blur(9px);
+  backdrop-filter: blur(8px);
 }
 
 .stat { padding: 22px; }
-.stat small { color: #c4d7d0; }
-.stat h2 { margin: 13px 0 0; font-size: 27px; }
 
-.panel { padding: 22px; margin-bottom: 20px; }
+.stat small { color: #c6d9d1; }
+
+.stat h2 {
+  margin: 13px 0 0;
+  font-size: 27px;
+}
+
+/* FORMULAIRES */
+
+.panel {
+  padding: 22px;
+  margin-bottom: 20px;
+}
+
 .panel h3 { margin: 0 0 18px; }
 
 .form-grid {
@@ -169,7 +199,7 @@ header h1 { margin: 0; font-size: 24px; }
 input, select {
   width: 100%;
   padding: 13px;
-  background: rgba(255,255,255,.95);
+  background: white;
   color: #172a24;
   border: 0;
   border-radius: 8px;
@@ -184,15 +214,22 @@ input:focus, select:focus {
   padding: 12px 17px;
   border: 0;
   border-radius: 8px;
-  background: var(--primary);
+  background: var(--green);
   color: white;
   cursor: pointer;
   font-weight: bold;
 }
 
 .btn:hover { filter: brightness(1.12); }
+
 .btn-danger { background: #c74747; }
-.btn-small { padding: 8px 11px; font-size: 12px; }
+
+.btn-small {
+  padding: 8px 11px;
+  font-size: 12px;
+}
+
+/* TABLEAUX */
 
 .search {
   max-width: 350px;
@@ -213,14 +250,20 @@ th, td {
   border-bottom: 1px solid rgba(255,255,255,.13);
 }
 
-th { color: #8ee4ca; font-size: 13px; }
+th {
+  color: #8ee4ca;
+  font-size: 13px;
+}
+
 td { font-size: 14px; }
 
 .empty {
   text-align: center;
-  color: #c6d5d0;
+  color: #d0ded8;
   padding: 25px;
 }
+
+/* ÉTATS DU STOCK */
 
 .status {
   display: inline-block;
@@ -234,8 +277,8 @@ td { font-size: 14px; }
 .status.out { background: #a73535; }
 
 .alert {
-  background: rgba(166,106,25,.25);
-  border: 1px solid #b77c2c;
+  background: rgba(166,106,25,.35);
+  border: 1px solid #d79a40;
   border-radius: 10px;
   padding: 14px;
   margin-bottom: 20px;
@@ -248,6 +291,8 @@ td { font-size: 14px; }
   padding: 20px;
 }
 
+/* RESPONSIVE */
+
 @media(max-width: 850px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
   .form-grid { grid-template-columns: 1fr; }
@@ -255,22 +300,46 @@ td { font-size: 14px; }
 
 @media(max-width: 600px) {
   .app { display: block; }
-  .sidebar { width: 100%; padding: 15px; }
+
+  .sidebar {
+    width: 100%;
+    padding: 15px;
+  }
+
   .logo { margin-bottom: 15px; }
-  .nav { display: flex; gap: 7px; }
+
+  .nav {
+    display: flex;
+    gap: 7px;
+  }
+
   .nav-title { display: none; }
-  .nav button { text-align: center; padding: 12px 7px; margin: 0; }
-  .main::before { inset: 0; }
+
+  .nav button {
+    text-align: center;
+    padding: 12px 7px;
+    margin: 0;
+  }
+
   header { padding: 17px; }
+
   .content { padding: 16px; }
+
   .stats { gap: 10px; }
+
   .stat { padding: 15px; }
+
   .stat h2 { font-size: 21px; }
+
+  .header-label { display: none; }
+
+  .main { background-attachment: scroll; }
 }
 </style>
 </head>
 
 <body>
+
 <div class="app">
 
   <aside class="sidebar">
@@ -294,29 +363,37 @@ td { font-size: 14px; }
 
     <div class="content">
 
+      <!-- DASHBOARD -->
+
       <section class="page active" id="dashboard">
+
         <div class="welcome">
           <h2>Bienvenue sur KotoStock 👋</h2>
           <p>Voici un aperçu de votre activité commerciale.</p>
         </div>
 
         <div class="stats">
+
           <div class="stat">
             <small>Nombre de produits</small>
             <h2 id="totalProducts">0</h2>
           </div>
+
           <div class="stat">
             <small>Stock total</small>
             <h2 id="totalStock">0</h2>
           </div>
+
           <div class="stat">
             <small>Nombre de ventes</small>
             <h2 id="totalSales">0</h2>
           </div>
+
           <div class="stat">
             <small>Chiffre d'affaires</small>
             <h2 id="revenue">0 F</h2>
           </div>
+
         </div>
 
         <div id="lowStockAlert"></div>
@@ -327,9 +404,13 @@ td { font-size: 14px; }
             Vos ventes apparaîtront ici.
           </p>
         </div>
+
       </section>
 
+      <!-- PRODUITS -->
+
       <section class="page" id="products">
+
         <div class="welcome">
           <h2>Gestion des produits</h2>
           <p>Ajoutez et surveillez les marchandises de votre boutique.</p>
@@ -337,17 +418,34 @@ td { font-size: 14px; }
 
         <div class="panel">
           <h3>Ajouter un produit</h3>
+
           <form id="productForm" class="form-grid">
-            <input id="productName" placeholder="Nom du produit" required>
-            <input id="productPrice" type="number" min="1" placeholder="Prix de vente (FCFA)" required>
-            <input id="productQuantity" type="number" min="0" placeholder="Quantité en stock" required>
-            <button class="btn" type="submit">+ Ajouter le produit</button>
+
+            <input id="productName"
+              placeholder="Nom du produit" required>
+
+            <input id="productPrice"
+              type="number" min="1"
+              placeholder="Prix de vente (FCFA)" required>
+
+            <input id="productQuantity"
+              type="number" min="0"
+              placeholder="Quantité en stock" required>
+
+            <button class="btn" type="submit">
+              + Ajouter le produit
+            </button>
+
           </form>
         </div>
 
         <div class="panel">
           <h3>Liste des produits</h3>
-          <input class="search" id="productSearch" placeholder="Rechercher un produit...">
+
+          <input class="search"
+            id="productSearch"
+            placeholder="Rechercher un produit...">
+
           <div class="table-wrap">
             <table>
               <thead>
@@ -359,13 +457,18 @@ td { font-size: 14px; }
                   <th>Action</th>
                 </tr>
               </thead>
+
               <tbody id="productTable"></tbody>
             </table>
           </div>
         </div>
+
       </section>
 
+      <!-- VENTES -->
+
       <section class="page" id="sales">
+
         <div class="welcome">
           <h2>Enregistrer une vente</h2>
           <p>Effectuez vos ventes et suivez votre historique.</p>
@@ -373,17 +476,27 @@ td { font-size: 14px; }
 
         <div class="panel">
           <h3>Nouvelle vente</h3>
+
           <form id="saleForm" class="form-grid">
+
             <select id="saleProduct" required>
               <option value="">Choisir un produit</option>
             </select>
-            <input id="saleQuantity" type="number" min="1" placeholder="Quantité vendue" required>
-            <button class="btn" type="submit">Valider la vente</button>
+
+            <input id="saleQuantity"
+              type="number" min="1"
+              placeholder="Quantité vendue" required>
+
+            <button class="btn" type="submit">
+              Valider la vente
+            </button>
+
           </form>
         </div>
 
         <div class="panel">
           <h3>Historique des ventes</h3>
+
           <div class="table-wrap">
             <table>
               <thead>
@@ -394,23 +507,33 @@ td { font-size: 14px; }
                   <th>Date</th>
                 </tr>
               </thead>
+
               <tbody id="salesTable"></tbody>
             </table>
           </div>
         </div>
+
       </section>
 
     </div>
 
-    <div class="footer">© 2026 KotoStock — Gestion simplifiée de votre boutique</div>
+    <div class="footer">
+      © 2026 KotoStock — Gestion simplifiée de votre boutique
+    </div>
+
   </main>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
 
-let products = JSON.parse(localStorage.getItem("kotoProducts") || "[]");
-let sales = JSON.parse(localStorage.getItem("kotoSales") || "[]");
+let products = JSON.parse(
+  localStorage.getItem("kotoProducts") || "[]"
+);
+
+let sales = JSON.parse(
+  localStorage.getItem("kotoSales") || "[]"
+);
 
 function saveData() {
   localStorage.setItem("kotoProducts", JSON.stringify(products));
@@ -431,17 +554,29 @@ function escapeHTML(value) {
   })[char]);
 }
 
+/* NAVIGATION ET CHANGEMENT DE PHOTO */
+
 function showPage(page) {
+
   document.querySelectorAll(".page").forEach(section => {
     section.classList.toggle("active", section.id === page);
   });
 
   document.querySelectorAll(".nav button").forEach(button => {
-    button.classList.toggle("active", button.dataset.page === page);
+    button.classList.toggle(
+      "active",
+      button.dataset.page === page
+    );
   });
 
   const main = $("main");
-  main.classList.remove("dashboard-bg", "products-bg", "sales-bg");
+
+  main.classList.remove(
+    "dashboard-bg",
+    "products-bg",
+    "sales-bg"
+  );
+
   main.classList.add(page + "-bg");
 
   $("pageTitle").textContent = {
@@ -454,10 +589,15 @@ function showPage(page) {
 }
 
 document.querySelectorAll(".nav button").forEach(button => {
-  button.addEventListener("click", () => showPage(button.dataset.page));
+  button.addEventListener("click", () => {
+    showPage(button.dataset.page);
+  });
 });
 
+/* AJOUT PRODUIT */
+
 $("productForm").addEventListener("submit", event => {
+
   event.preventDefault();
 
   const name = $("productName").value.trim();
@@ -479,15 +619,22 @@ $("productForm").addEventListener("submit", event => {
   saveData();
   event.target.reset();
   refresh();
+
   alert("Produit ajouté avec succès !");
 });
 
+/* ENREGISTREMENT VENTE */
+
 $("saleForm").addEventListener("submit", event => {
+
   event.preventDefault();
 
   const id = Number($("saleProduct").value);
   const quantity = Number($("saleQuantity").value);
-  const product = products.find(item => Number(item.id) === id);
+
+  const product = products.find(
+    item => Number(item.id) === id
+  );
 
   if (!product) {
     alert("Choisissez un produit.");
@@ -512,23 +659,40 @@ $("saleForm").addEventListener("submit", event => {
   saveData();
   event.target.reset();
   refresh();
+
   alert("Vente enregistrée !");
 });
 
+/* RECHERCHE */
+
 $("productSearch").addEventListener("input", refresh);
 
+/* SUPPRESSION PRODUIT */
+
 function deleteProduct(id) {
-  const product = products.find(item => Number(item.id) === Number(id));
+
+  const product = products.find(
+    item => Number(item.id) === Number(id)
+  );
+
   if (!product) return;
 
-  if (!confirm("Supprimer le produit " + product.name + " ?")) return;
+  if (!confirm("Supprimer le produit " + product.name + " ?")) {
+    return;
+  }
 
-  products = products.filter(item => Number(item.id) !== Number(id));
+  products = products.filter(
+    item => Number(item.id) !== Number(id)
+  );
+
   saveData();
   refresh();
 }
 
+/* AFFICHAGE PRODUITS */
+
 function renderProducts() {
+
   const search = $("productSearch").value.toLowerCase();
 
   const filtered = products.filter(product =>
@@ -537,7 +701,9 @@ function renderProducts() {
 
   $("productTable").innerHTML = filtered.length
     ? filtered.map(product => {
+
         const quantity = Number(product.quantity);
+
         const status = quantity === 0
           ? '<span class="status out">Rupture</span>'
           : quantity <= 5
@@ -558,19 +724,28 @@ function renderProducts() {
             </td>
           </tr>
         `;
+
       }).join("")
     : '<tr><td colspan="5" class="empty">Aucun produit trouvé.</td></tr>';
 
   $("saleProduct").innerHTML =
     '<option value="">Choisir un produit</option>' +
-    products.filter(product => Number(product.quantity) > 0)
-      .map(product =>
-        `<option value="${Number(product.id)}">${escapeHTML(product.name)} — Stock : ${Number(product.quantity)}</option>`
-      ).join("");
+
+    products
+      .filter(product => Number(product.quantity) > 0)
+      .map(product => `
+        <option value="${Number(product.id)}">
+          ${escapeHTML(product.name)} — Stock : ${Number(product.quantity)}
+        </option>
+      `).join("");
 }
 
+/* HISTORIQUE DES VENTES */
+
 function renderSales() {
+
   $("salesTable").innerHTML = sales.length
+
     ? sales.map(sale => `
         <tr>
           <td>${escapeHTML(sale.product)}</td>
@@ -579,16 +754,22 @@ function renderSales() {
           <td>${escapeHTML(sale.date)}</td>
         </tr>
       `).join("")
+
     : '<tr><td colspan="4" class="empty">Aucune vente enregistrée.</td></tr>';
 }
 
+/* STATISTIQUES */
+
 function renderDashboard() {
+
   const stock = products.reduce(
-    (sum, product) => sum + Number(product.quantity || 0), 0
+    (sum, product) =>
+      sum + Number(product.quantity || 0), 0
   );
 
   const revenue = sales.reduce(
-    (sum, sale) => sum + Number(sale.amount || 0), 0
+    (sum, sale) =>
+      sum + Number(sale.amount || 0), 0
   );
 
   $("totalProducts").textContent = products.length;
@@ -601,13 +782,18 @@ function renderDashboard() {
   );
 
   $("lowStockAlert").innerHTML = low.length
-    ? `<div class="alert">⚠️ ${low.length} produit(s) ont un stock faible ou sont en rupture.</div>`
+    ? `<div class="alert">
+        ⚠️ ${low.length} produit(s) ont un stock faible ou sont en rupture.
+       </div>`
     : "";
 
   $("dashboardMessage").textContent = sales.length
-    ? "Dernière vente : " + sales[0].product + " — " + money(sales[0].amount)
+    ? "Dernière vente : " + sales[0].product +
+      " — " + money(sales[0].amount)
     : "Aucune vente pour le moment.";
 }
+
+/* ACTUALISATION */
 
 function refresh() {
   renderDashboard();
@@ -617,5 +803,6 @@ function refresh() {
 
 refresh();
 </script>
+
 </body>
 </html>
