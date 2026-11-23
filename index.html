@@ -58,38 +58,23 @@ input:focus,select:focus{border-color:#315b83}
 .sidebar-bottom{margin-top:auto}
 .logout{background:#8b3434!important}
 
-/* ARRIÈRE-PLANS CORRIGÉS */
+/* ARRIÈRE-PLANS */
 .main{
  flex:1;min-width:0;padding:28px;
- background-size:cover;
- background-position:center;
- background-repeat:no-repeat;
- background-attachment:scroll;
- position:relative;
- isolation:isolate;
+ background-size:cover;background-position:center;
+ background-repeat:no-repeat;background-attachment:scroll;
+ position:relative;isolation:isolate;
 }
-
-/* Voile sombre très léger : les photos restent visibles */
 .main::before{
- content:"";
- position:absolute;
- inset:0;
- pointer-events:none;
- background:rgba(12,20,35,.10);
- z-index:-1;
+ content:"";position:absolute;inset:0;pointer-events:none;
+ background:rgba(12,20,35,.10);z-index:-1;
 }
-
-/* PHOTO DU TABLEAU DE BORD */
 .dashboard-bg{
  background-image:url("https://images.unsplash.com/photo-1604719312566-8912e9c8a213?auto=format&fit=crop&w=2000&q=90");
 }
-
-/* PHOTO DES PRODUITS */
 .products-bg{
  background-image:url("https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=2000&q=90");
 }
-
-/* PHOTO DES VENTES */
 .sales-bg{
  background-image:url("https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=2000&q=90");
 }
@@ -102,29 +87,21 @@ input:focus,select:focus{border-color:#315b83}
 }
 .topbar h1{margin:0;font-size:26px}
 .user-label{background:#fff;padding:10px 14px;border-radius:9px;font-size:13px}
-
 .stats{
  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
  gap:16px;margin-bottom:22px
 }
-
-/* PANNEAUX LISIBLES SANS FLOU */
 .stat,.panel{
- background:rgba(255,255,255,.94);
- border-radius:14px;padding:20px;
+ background:rgba(255,255,255,.94);border-radius:14px;padding:20px;
  box-shadow:0 5px 20px rgba(0,0,0,.10);
- backdrop-filter:none;
- -webkit-backdrop-filter:none;
 }
 .stat p{color:#758094;font-size:13px;margin:0 0 12px}
 .stat strong{font-size:25px}
 .panel{margin-bottom:20px}
 .panel h2{font-size:17px;margin:0 0 18px}
 .grid-two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-
 .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .form-grid .full{grid-column:1/-1}
-
 .action{
  border:0;background:#234d78;color:white;border-radius:8px;
  padding:12px 17px;font-weight:bold
@@ -132,7 +109,6 @@ input:focus,select:focus{border-color:#315b83}
 .action:hover{background:#173958}
 .danger{background:#a33d3d}
 .secondary{background:#e9eef5;color:#26374b}
-
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:left;padding:13px 9px;border-bottom:1px solid #e9edf2}
 th{color:#758094}
@@ -140,13 +116,20 @@ th{color:#758094}
 .empty{text-align:center;color:#8490a0;padding:25px}
 .search{max-width:320px;margin-bottom:15px}
 .badge{padding:5px 8px;border-radius:20px;background:#e8f1ff;color:#245b8d;font-size:11px}
+
+/* ABONNEMENT ET PAIEMENT */
 .payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .payment-option{
- background:white;border:1px solid #dce2eb;border-radius:12px;
+ background:white;border:2px solid #dce2eb;border-radius:12px;
  padding:17px;display:flex;align-items:center;gap:12px;
- text-align:left;font-weight:bold;color:#26374b
+ text-align:left;font-weight:bold;color:#26374b;width:100%;
+ transition:.2s;
 }
 .payment-option:hover{border-color:#234d78;background:#f4f8ff}
+.payment-option.selected{
+ border-color:#234d78;background:#edf5ff;
+ box-shadow:0 0 0 2px #234d7820;
+}
 .payment-logo{
  width:42px;height:42px;border-radius:9px;display:flex;
  align-items:center;justify-content:center;font-weight:bold;
@@ -156,8 +139,30 @@ th{color:#758094}
 .moov{background:#e5f0ff;color:#1754a0}
 .celtiis{background:#e8f7ed;color:#16783b}
 .bank{background:#edf0f5;color:#293d59}
-#paymentMessage{margin-top:15px;font-size:13px;color:#245b8d}
-.trial{background:#fff5d8;padding:13px;border-radius:10px;font-size:13px;margin-bottom:18px}
+#paymentMessage{
+ margin-top:15px;font-size:13px;color:#245b8d;
+ line-height:1.6;
+}
+.trial{
+ background:#fff5d8;padding:13px;border-radius:10px;
+ font-size:13px;margin-bottom:18px;line-height:1.5;
+}
+.test-notice{
+ background:#eef5ff;border:1px solid #d5e5fa;
+ color:#244c78;padding:14px;border-radius:10px;
+ font-size:13px;line-height:1.6;margin-top:15px;
+}
+.test-button{
+ width:100%;margin-top:15px;padding:13px;border:0;
+ border-radius:9px;background:#234d78;color:white;
+ font-weight:bold;
+}
+.test-button:disabled{opacity:.5;cursor:not-allowed}
+.price{
+ font-size:29px;font-weight:bold;color:#234d78;
+ margin:8px 0;
+}
+.small{font-size:13px;color:#758094;line-height:1.5}
 
 @media(max-width:900px){
  .sidebar{width:200px}
@@ -218,6 +223,7 @@ th{color:#758094}
     <a onclick="showRegister()">Créer un compte</a>
    </p>
   </div>
+
   <p id="authMessage" class="message"></p>
   <p class="notice">Version de démonstration : les comptes sont enregistrés sur ce navigateur. Un serveur sera nécessaire pour sécuriser les comptes.</p>
  </div>
@@ -245,12 +251,14 @@ th{color:#758094}
   <!-- TABLEAU DE BORD -->
   <section id="dashboardPage">
    <div id="trialBanner" class="trial"></div>
+
    <div class="stats">
     <div class="stat"><p>Produits enregistrés</p><strong id="statProducts">0</strong></div>
     <div class="stat"><p>Stock total</p><strong id="statStock">0</strong></div>
     <div class="stat"><p>Nombre de ventes</p><strong id="statSales">0</strong></div>
     <div class="stat"><p>Chiffre d'affaires</p><strong id="statRevenue">0 FCFA</strong></div>
    </div>
+
    <div class="grid-two">
     <div class="panel">
      <h2>Bienvenue sur KotoStock</h2>
@@ -337,31 +345,46 @@ th{color:#758094}
    <div class="panel">
     <h2>Votre abonnement KotoStock</h2>
     <div class="trial" id="subscriptionStatus"></div>
-    <h2>Premium : 1 500 FCFA / mois</h2>
-    <p class="small">Après 3 jours d'essai gratuit.</p>
+    <div class="price">1 500 FCFA</div>
+    <p class="small">Abonnement Premium valable un mois, après 3 jours d'essai gratuit.</p>
    </div>
 
    <div class="panel">
     <h2>Choisissez votre moyen de paiement</h2>
+    <p class="small">Sélectionnez le moyen de paiement que vous souhaitez utiliser.</p>
+
     <div class="payment-grid">
-     <button class="payment-option" onclick="choosePayment('MTN Mobile Money')">
+     <button type="button" class="payment-option" data-method="MTN Mobile Money" onclick="choosePayment('MTN Mobile Money',this)">
       <span class="payment-logo mtn">MTN</span>
       <span>MTN Mobile Money</span>
      </button>
-     <button class="payment-option" onclick="choosePayment('Moov Money')">
+
+     <button type="button" class="payment-option" data-method="Moov Money" onclick="choosePayment('Moov Money',this)">
       <span class="payment-logo moov">MOOV</span>
       <span>Moov Money</span>
      </button>
-     <button class="payment-option" onclick="choosePayment('Celtiis Cash')">
+
+     <button type="button" class="payment-option" data-method="Celtiis Cash" onclick="choosePayment('Celtiis Cash',this)">
       <span class="payment-logo celtiis">C</span>
       <span>Celtiis Cash</span>
      </button>
-     <button class="payment-option" onclick="choosePayment('Carte bancaire')">
+
+     <button type="button" class="payment-option" data-method="Carte bancaire" onclick="choosePayment('Carte bancaire',this)">
       <span class="payment-logo bank">VISA</span>
       <span>Carte bancaire</span>
      </button>
     </div>
-    <p id="paymentMessage">Sélectionnez votre moyen de paiement.</p>
+
+    <p id="paymentMessage">Aucun moyen de paiement sélectionné.</p>
+
+    <button type="button" id="testPaymentButton" class="test-button" onclick="testPayment()" disabled>
+     Tester le parcours de paiement
+    </button>
+
+    <div class="test-notice">
+     <strong>Mode test activé</strong><br>
+     Cette version permet uniquement de tester l'affichage et la sélection des moyens de paiement. Aucun argent ne sera débité et aucun abonnement ne sera activé.
+    </div>
    </div>
   </section>
  </main>
@@ -447,6 +470,7 @@ function startApp(user) {
 
 document.getElementById("registerForm").addEventListener("submit",function(e){
  e.preventDefault();
+
  const nom=document.getElementById("regNom").value.trim();
  const prenom=document.getElementById("regPrenom").value.trim();
  const code=document.getElementById("regCode").value;
@@ -456,6 +480,7 @@ document.getElementById("registerForm").addEventListener("submit",function(e){
   document.getElementById("authMessage").textContent="Le code doit contenir au moins 4 caractères.";
   return;
  }
+
  if(users.some(u=>u.nom.toLowerCase()===nom.toLowerCase()&&u.prenom.toLowerCase()===prenom.toLowerCase())){
   document.getElementById("authMessage").textContent="Ce compte existe déjà. Connectez-vous.";
   return;
@@ -468,11 +493,13 @@ document.getElementById("registerForm").addEventListener("submit",function(e){
  if(!localStorage.getItem("kotoTrialStart")){
   localStorage.setItem("kotoTrialStart",String(Date.now()));
  }
+
  startApp(user);
 });
 
 document.getElementById("loginForm").addEventListener("submit",function(e){
  e.preventDefault();
+
  const nom=document.getElementById("loginNom").value.trim();
  const prenom=document.getElementById("loginPrenom").value.trim();
  const code=document.getElementById("loginCode").value;
@@ -487,6 +514,7 @@ document.getElementById("loginForm").addEventListener("submit",function(e){
   document.getElementById("authMessage").textContent="Informations incorrectes.";
   return;
  }
+
  startApp(user);
 });
 
@@ -502,6 +530,7 @@ function showPage(page,button) {
  ["dashboard","products","sales","subscription"].forEach(p=>
   document.getElementById(p+"Page").classList.add("hidden")
  );
+
  document.getElementById(page+"Page").classList.remove("hidden");
 
  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
@@ -513,10 +542,12 @@ function showPage(page,button) {
   sales:"Gestion des ventes",
   subscription:"Abonnement KotoStock"
  };
+
  document.getElementById("pageTitle").textContent=titles[page];
 
  const main=document.getElementById("mainContent");
  main.classList.remove("dashboard-bg","products-bg","sales-bg");
+
  if(page==="dashboard") main.classList.add("dashboard-bg");
  if(page==="products") main.classList.add("products-bg");
  if(page==="sales") main.classList.add("sales-bg");
@@ -526,9 +557,11 @@ function showPage(page,button) {
 /* PRODUITS */
 document.getElementById("productForm").addEventListener("submit",function(e){
  e.preventDefault();
+
  const name=document.getElementById("productName").value.trim();
  const price=Number(document.getElementById("productPrice").value);
  const quantity=Number(document.getElementById("productQty").value);
+
  if(!name||price<=0||quantity<0)return;
 
  products.push({id:Date.now(),name,price,quantity});
@@ -539,6 +572,7 @@ document.getElementById("productForm").addEventListener("submit",function(e){
 
 function deleteProduct(id) {
  if(!confirm("Supprimer ce produit ?"))return;
+
  products=products.filter(p=>String(p.id)!==String(id));
  saveProducts();
  renderAll();
@@ -562,12 +596,14 @@ function renderProducts() {
   <td><button class="action danger" onclick="deleteProduct('${escapeHTML(String(p.id))}')">Supprimer</button></td>
  </tr>`).join("");
 }
+
 document.getElementById("productSearch").addEventListener("input",renderProducts);
 
 /* VENTES */
 function renderSaleOptions() {
  const select=document.getElementById("saleProduct");
  select.innerHTML='<option value="">Sélectionner un produit</option>';
+
  products.forEach(p=>{
   select.innerHTML+=`<option value="${escapeHTML(String(p.id))}">${escapeHTML(p.name)} — Stock : ${stockOf(p)}</option>`;
  });
@@ -575,12 +611,16 @@ function renderSaleOptions() {
 
 document.getElementById("saleForm").addEventListener("submit",function(e){
  e.preventDefault();
+
  const id=document.getElementById("saleProduct").value;
  const qty=Number(document.getElementById("saleQty").value);
  const product=products.find(p=>String(p.id)===String(id));
 
  if(!product){alert("Choisissez un produit.");return}
- if(qty<=0||qty>stockOf(product)){alert("Quantité invalide ou stock insuffisant.");return}
+ if(qty<=0||qty>stockOf(product)){
+  alert("Quantité invalide ou stock insuffisant.");
+  return;
+ }
 
  const amount=priceOf(product)*qty;
  setStock(product,stockOf(product)-qty);
@@ -602,10 +642,12 @@ document.getElementById("saleForm").addEventListener("submit",function(e){
 
 function renderSales() {
  const tbody=document.getElementById("salesTable");
+
  if(!sales.length){
   tbody.innerHTML='<tr><td colspan="4" class="empty">Aucune vente enregistrée.</td></tr>';
   return;
  }
+
  tbody.innerHTML=sales.map(s=>`
  <tr>
   <td>${escapeHTML(saleName(s))}</td>
@@ -618,12 +660,16 @@ function renderSales() {
 /* TABLEAU DE BORD */
 function renderDashboard() {
  document.getElementById("statProducts").textContent=products.length;
+
  document.getElementById("statStock").textContent=
   products.reduce((sum,p)=>sum+stockOf(p),0);
+
  document.getElementById("statSales").textContent=sales.length;
+
  document.getElementById("statRevenue").textContent=
   money(sales.reduce((sum,s)=>sum+saleAmount(s),0));
 }
+
 function renderAll() {
  renderDashboard();
  renderProducts();
@@ -635,33 +681,74 @@ function renderAll() {
 function trialDaysLeft() {
  const start=Number(localStorage.getItem("kotoTrialStart"));
  if(!start)return 3;
+
  return Math.max(0,3-Math.floor((Date.now()-start)/86400000));
 }
+
 function updateTrial() {
  const days=trialDaysLeft();
+
  const text=days>0
   ?"Votre essai gratuit est en cours. Il vous reste "+days+" jour(s)."
   :"Votre période d'essai de 3 jours est terminée. Choisissez un moyen de paiement pour l'abonnement Premium.";
+
  document.getElementById("trialBanner").textContent=text;
  document.getElementById("subscriptionStatus").textContent=text;
 }
 
-/* CHOIX DU PAIEMENT */
-function choosePayment(method) {
+/* PAIEMENT EN MODE TEST */
+let selectedPaymentMethod="";
+
+function choosePayment(method,button) {
+ selectedPaymentMethod=method;
+
+ document.querySelectorAll(".payment-option").forEach(option=>{
+  option.classList.remove("selected");
+ });
+
+ button.classList.add("selected");
+
  document.getElementById("paymentMessage").textContent=
-  method+" sélectionné pour l'abonnement de 1 500 FCFA/mois. Le paiement réel nécessite une intégration sécurisée.";
+  method+" sélectionné. Montant prévu : 1 500 FCFA par mois.";
+
+ document.getElementById("testPaymentButton").disabled=false;
+}
+
+function testPayment() {
+ if(!selectedPaymentMethod){
+  alert("Veuillez d'abord choisir un moyen de paiement.");
+  return;
+ }
+
+ const message=
+  "TEST KOTOSTOCK\n\n"+
+  "Moyen choisi : "+selectedPaymentMethod+"\n"+
+  "Montant prévu : 1 500 FCFA\n\n"+
+  "Ceci est une simulation. Aucun paiement réel n'a été effectué et aucun abonnement n'a été activé.";
+
+ document.getElementById("paymentMessage").textContent=
+  "Test effectué : le parcours de sélection de "+selectedPaymentMethod+" fonctionne. Aucun paiement réel n'a été effectué.";
+
+ alert(message);
 }
 
 /* SECURITE D'AFFICHAGE */
 function escapeHTML(value) {
  return String(value).replace(/[&<>"']/g,c=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  '"':"&quot;",
+  "'":"&#39;"
  }[c]));
 }
 
 /* SESSION */
 const savedUser=getCurrentUser();
-if(savedUser)startApp(savedUser);
+
+if(savedUser){
+ startApp(savedUser);
+}
 </script>
 
 </body>
