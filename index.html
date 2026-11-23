@@ -5,46 +5,146 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KotoStock - Gestion de boutique</title>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f3f6fb;color:#172033}
-header{background:#123b65;color:white;padding:22px}
-header h1{margin:0}
-header p{margin:6px 0 0;color:#d9e8f7}
-main{max-width:1000px;margin:25px auto;padding:15px}
-nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
-button{border:0;padding:11px 16px;border-radius:8px;background:#1769aa;color:white;cursor:pointer}
-button:hover{opacity:.85}
-.card{background:white;padding:20px;border-radius:12px;margin-bottom:18px;box-shadow:0 2px 8px #0000000d}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
-.stat{background:#eaf3fc;padding:16px;border-radius:10px}
-.stat strong{display:block;font-size:24px;margin-top:8px}
-input{padding:11px;border:1px solid #ccd5e0;border-radius:7px;width:100%;margin:6px 0 12px}
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+color:#172033;
+background:
+linear-gradient(rgba(8,25,45,.72),rgba(8,25,45,.78)),
+url("https://images.unsplash.com/photo-1604719312566-8912e9c8a213?auto=format&fit=crop&w=2000&q=85")
+center/cover fixed no-repeat;
+min-height:100vh;
+}
+
+header{
+background:rgba(10,42,75,.92);
+color:white;
+padding:22px;
+backdrop-filter:blur(10px);
+border-bottom:2px solid #36a3e8;
+}
+
+header h1{margin:0;font-size:30px}
+header p{margin:7px 0 0;color:#d9e8f7}
+
+main{max-width:1100px;margin:25px auto;padding:15px}
+
+nav{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:20px;
+}
+
+button{
+border:0;
+padding:12px 17px;
+border-radius:8px;
+background:#087ac1;
+color:white;
+cursor:pointer;
+font-weight:bold;
+transition:.2s;
+}
+
+button:hover{background:#075c91;transform:translateY(-2px)}
+
+.card{
+background:rgba(255,255,255,.94);
+padding:22px;
+border-radius:14px;
+margin-bottom:20px;
+box-shadow:0 5px 20px rgba(0,0,0,.18);
+backdrop-filter:blur(8px);
+}
+
+.card h2,.card h3{color:#123b65}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+gap:14px;
+}
+
+.stat{
+background:linear-gradient(135deg,#e5f3ff,#f4f9ff);
+padding:18px;
+border-radius:12px;
+border-left:4px solid #087ac1;
+}
+
+.stat strong{
+display:block;
+font-size:24px;
+margin-top:10px;
+color:#075c91;
+}
+
+input,select{
+padding:12px;
+border:1px solid #ccd5e0;
+border-radius:8px;
+width:100%;
+margin:7px 0 14px;
+font-size:15px;
+background:white;
+}
+
 label{font-weight:bold;font-size:14px}
+
 table{width:100%;border-collapse:collapse}
-th,td{text-align:left;padding:11px;border-bottom:1px solid #e5eaf0}
-th{background:#edf3f8}
+th,td{text-align:left;padding:12px;border-bottom:1px solid #e5eaf0}
+th{background:#eaf3fc;color:#123b65}
+
 .hidden{display:none}
 .danger{background:#b83232}
-small{color:#65748b}
-@media(max-width:600px){main{padding:10px}.card{padding:14px}table{font-size:13px}}
+.danger:hover{background:#8d2020}
+
+#salesList{padding-left:20px}
+#salesList li{padding:8px 0;border-bottom:1px solid #e5eaf0}
+
+footer{
+text-align:center;
+color:white;
+padding:20px;
+background:rgba(10,42,75,.9);
+margin-top:30px;
+}
+
+@media(max-width:600px){
+main{padding:10px}
+.card{padding:15px}
+header h1{font-size:25px}
+table{font-size:13px}
+button{font-size:13px}
+}
 </style>
 </head>
+
 <body>
+
 <header>
 <h1>📦 KotoStock</h1>
-<p>Gérez votre boutique simplement</p>
+<p>Gérez votre boutique simplement et efficacement</p>
 </header>
+
 <main>
+
 <nav>
-<button onclick="showPage('dashboard')">Tableau de bord</button>
-<button onclick="showPage('products')">Produits</button>
-<button onclick="showPage('sales')">Ventes</button>
+<button onclick="showPage('dashboard')">📊 Tableau de bord</button>
+<button onclick="showPage('products')">📦 Produits</button>
+<button onclick="showPage('sales')">💰 Ventes</button>
 </nav>
 
 <section id="dashboard">
+
 <div class="card">
 <h2>Tableau de bord</h2>
+
 <div class="stats">
 <div class="stat">Produits<strong id="totalProducts">0</strong></div>
 <div class="stat">Stock total<strong id="totalStock">0</strong></div>
@@ -52,57 +152,103 @@ small{color:#65748b}
 <div class="stat">Chiffre d'affaires<strong id="revenue">0 FCFA</strong></div>
 </div>
 </div>
+
 <div class="card">
-<h3>Bienvenue sur KotoStock !</h3>
-<p>Commencez par ajouter vos produits, puis enregistrez vos ventes.</p>
+<h3>Bienvenue sur KotoStock ! 👋</h3>
+<p>Votre outil de gestion de boutique est prêt.</p>
+<p>Ajoutez vos produits, suivez votre stock et enregistrez vos ventes facilement.</p>
 </div>
+
 </section>
 
 <section id="products" class="hidden">
+
 <div class="card">
-<h2>Ajouter un produit</h2>
+<h2>➕ Ajouter un produit</h2>
+
 <form id="productForm">
+
 <label>Nom du produit</label>
 <input id="productName" placeholder="Ex : Riz 5 kg" required>
+
 <label>Prix de vente (FCFA)</label>
 <input id="productPrice" type="number" min="1" required>
+
 <label>Quantité en stock</label>
 <input id="productQty" type="number" min="0" required>
+
 <button type="submit">Ajouter le produit</button>
+
 </form>
 </div>
+
 <div class="card">
-<h2>Liste des produits</h2>
+<h2>📋 Liste des produits</h2>
+
 <div style="overflow-x:auto">
 <table>
-<thead><tr><th>Produit</th><th>Prix</th><th>Stock</th><th>Action</th></tr></thead>
+<thead>
+<tr>
+<th>Produit</th>
+<th>Prix</th>
+<th>Stock</th>
+<th>Action</th>
+</tr>
+</thead>
 <tbody id="productList"></tbody>
 </table>
 </div>
 </div>
+
 </section>
 
 <section id="sales" class="hidden">
+
 <div class="card">
-<h2>Enregistrer une vente</h2>
+<h2>💰 Enregistrer une vente</h2>
+
 <form id="saleForm">
+
 <label>Produit</label>
-<select id="saleProduct" required style="width:100%;padding:11px;margin:6px 0 12px"></select>
+<select id="saleProduct" required></select>
+
 <label>Quantité vendue</label>
 <input id="saleQty" type="number" min="1" required>
+
 <button type="submit">Valider la vente</button>
+
 </form>
 </div>
+
 <div class="card">
-<h2>Historique des ventes</h2>
+<h2>📜 Historique des ventes</h2>
 <ul id="salesList"></ul>
 </div>
+
 </section>
+
 </main>
 
+<footer>
+<p>© 2026 KotoStock - Gestion intelligente de boutique</p>
+</footer>
+
 <script>
+
 let products=JSON.parse(localStorage.getItem("kotoProducts")||"[]");
 let sales=JSON.parse(localStorage.getItem("kotoSales")||"[]");
+
+function escapeHTML(value){
+return String(value).replace(/[&<>"']/g,function(char){
+return {
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#39;"
+}[char];
+});
+}
 
 function save(){
 localStorage.setItem("kotoProducts",JSON.stringify(products));
@@ -117,57 +263,111 @@ document.getElementById(id).classList.toggle("hidden",id!==page);
 }
 
 document.getElementById("productForm").addEventListener("submit",function(e){
+
 e.preventDefault();
+
 const name=document.getElementById("productName").value.trim();
 const price=Number(document.getElementById("productPrice").value);
 const qty=Number(document.getElementById("productQty").value);
+
 if(!name||price<=0||qty<0)return;
-products.push({id:Date.now(),name,price,qty});
+
+products.push({
+id:Date.now(),
+name:name,
+price:price,
+qty:qty
+});
+
 this.reset();
 save();
+
+alert("Produit ajouté avec succès !");
 });
 
 document.getElementById("saleForm").addEventListener("submit",function(e){
+
 e.preventDefault();
+
 const id=Number(document.getElementById("saleProduct").value);
 const qty=Number(document.getElementById("saleQty").value);
+
 const product=products.find(p=>p.id===id);
+
 if(!product||qty<=0||qty>product.qty){
 alert("Stock insuffisant ou quantité invalide.");
 return;
 }
+
 product.qty-=qty;
-sales.push({name:product.name,qty,total:product.price*qty,date:new Date().toLocaleString("fr-FR")});
+
+sales.push({
+name:product.name,
+qty:qty,
+total:product.price*qty,
+date:new Date().toLocaleString("fr-FR")
+});
+
 this.reset();
 save();
+
+alert("Vente enregistrée avec succès !");
 });
 
 function deleteProduct(id){
+
 if(confirm("Supprimer ce produit ?")){
+
 products=products.filter(p=>p.id!==id);
+
 save();
 }
 }
 
 function render(){
+
 document.getElementById("totalProducts").textContent=products.length;
-document.getElementById("totalStock").textContent=products.reduce((s,p)=>s+p.qty,0);
+
+document.getElementById("totalStock").textContent=
+products.reduce((s,p)=>s+p.qty,0);
+
 document.getElementById("totalSales").textContent=sales.length;
-document.getElementById("revenue").textContent=sales.reduce((s,v)=>s+v.total,0).toLocaleString("fr-FR")+" FCFA";
 
-document.getElementById("productList").innerHTML=products.map(p=>
-`<tr><td>${p.name}</td><td>${p.price.toLocaleString("fr-FR")} FCFA</td><td>${p.qty}</td><td><button class="danger" onclick="deleteProduct(${p.id})">Supprimer</button></td></tr>`
-).join("");
+document.getElementById("revenue").textContent=
+sales.reduce((s,v)=>s+v.total,0).toLocaleString("fr-FR")+" FCFA";
 
-document.getElementById("saleProduct").innerHTML=products.filter(p=>p.qty>0).map(p=>
-`<option value="${p.id}">${p.name} — ${p.qty} disponible(s)</option>`
-).join("");
+document.getElementById("productList").innerHTML=
+products.map(p=>`
+<tr>
+<td>${escapeHTML(p.name)}</td>
+<td>${Number(p.price).toLocaleString("fr-FR")} FCFA</td>
+<td>${p.qty}</td>
+<td>
+<button class="danger" onclick="deleteProduct(${p.id})">Supprimer</button>
+</td>
+</tr>
+`).join("");
 
-document.getElementById("salesList").innerHTML=sales.map(s=>
-`<li>${s.date} — ${s.name} : ${s.qty} vendu(s), ${s.total.toLocaleString("fr-FR")} FCFA</li>`
-).join("");
+document.getElementById("saleProduct").innerHTML=
+products.filter(p=>p.qty>0).map(p=>`
+<option value="${p.id}">
+${escapeHTML(p.name)} — ${p.qty} disponible(s)
+</option>
+`).join("");
+
+document.getElementById("salesList").innerHTML=
+sales.map(s=>`
+<li>
+${escapeHTML(s.date)} — ${escapeHTML(s.name)} :
+${s.qty} vendu(s), ${Number(s.total).toLocaleString("fr-FR")} FCFA
+</li>
+`).join("");
+
 }
+
 render();
+
 </script>
+
 </body>
 </html>
