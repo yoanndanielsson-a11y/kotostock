@@ -9,7 +9,7 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f3f5f9;color:#202938}
-button,input{font:inherit}
+button,input,select{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
 
@@ -27,11 +27,11 @@ button{cursor:pointer}
 .brand span{color:#e6a900}
 .subtitle{text-align:center;color:#7b8494;font-size:13px;margin-bottom:25px}
 label{display:block;font-size:13px;font-weight:bold;margin:14px 0 7px}
-input{
+input,select{
  width:100%;padding:13px;border:1px solid #dce1e9;
  border-radius:9px;outline:none;background:white;
 }
-input:focus{border-color:#315b83}
+input:focus,select:focus{border-color:#315b83}
 .primary{
  width:100%;padding:14px;border:0;border-radius:9px;
  background:#234d78;color:white;font-weight:bold;margin-top:18px;
@@ -57,57 +57,100 @@ input:focus{border-color:#315b83}
 .nav-btn:hover,.nav-btn.active{background:#294362;color:white}
 .sidebar-bottom{margin-top:auto}
 .logout{background:#8b3434!important}
-.main{flex:1;min-width:0;padding:28px;background-size:cover;
- background-position:center;background-attachment:fixed;position:relative}
-.main:before{
- content:"";position:fixed;inset:0;pointer-events:none;
- background:rgba(245,247,251,.88);z-index:0;
+
+/* ARRIÈRE-PLANS CORRIGÉS */
+.main{
+ flex:1;min-width:0;padding:28px;
+ background-size:cover;
+ background-position:center;
+ background-repeat:no-repeat;
+ background-attachment:scroll;
+ position:relative;
+ isolation:isolate;
 }
+
+/* Voile sombre très léger : les photos restent visibles */
+.main::before{
+ content:"";
+ position:absolute;
+ inset:0;
+ pointer-events:none;
+ background:rgba(12,20,35,.10);
+ z-index:-1;
+}
+
+/* PHOTO DU TABLEAU DE BORD */
+.dashboard-bg{
+ background-image:url("https://images.unsplash.com/photo-1604719312566-8912e9c8a213?auto=format&fit=crop&w=2000&q=90");
+}
+
+/* PHOTO DES PRODUITS */
+.products-bg{
+ background-image:url("https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=2000&q=90");
+}
+
+/* PHOTO DES VENTES */
+.sales-bg{
+ background-image:url("https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=2000&q=90");
+}
+
+/* CONTENU */
 .main>*{position:relative;z-index:1}
-.dashboard-bg{background-image:url('https://images.unsplash.com/photo-1604719312566-8912e9c8a213?auto=format&fit=crop&w=2000&q=85')}
-.products-bg{background-image:url('https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=2000&q=85')}
-.sales-bg{background-image:url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=2000&q=85')}
-.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:25px;flex-wrap:wrap}
+.topbar{
+ display:flex;justify-content:space-between;align-items:center;
+ gap:12px;margin-bottom:25px;flex-wrap:wrap
+}
 .topbar h1{margin:0;font-size:26px}
-.user-label{background:white;padding:10px 14px;border-radius:9px;font-size:13px}
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}
+.user-label{background:#fff;padding:10px 14px;border-radius:9px;font-size:13px}
+
+.stats{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:16px;margin-bottom:22px
+}
+
+/* PANNEAUX LISIBLES SANS FLOU */
 .stat,.panel{
- background:#ffffffed;border-radius:14px;padding:20px;
- box-shadow:0 5px 20px #1b35520c;
+ background:rgba(255,255,255,.94);
+ border-radius:14px;padding:20px;
+ box-shadow:0 5px 20px rgba(0,0,0,.10);
+ backdrop-filter:none;
+ -webkit-backdrop-filter:none;
 }
 .stat p{color:#758094;font-size:13px;margin:0 0 12px}
 .stat strong{font-size:25px}
 .panel{margin-bottom:20px}
 .panel h2{font-size:17px;margin:0 0 18px}
 .grid-two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+
 .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .form-grid .full{grid-column:1/-1}
+
 .action{
  border:0;background:#234d78;color:white;border-radius:8px;
- padding:12px 17px;font-weight:bold;
+ padding:12px 17px;font-weight:bold
 }
 .action:hover{background:#173958}
 .danger{background:#a33d3d}
 .secondary{background:#e9eef5;color:#26374b}
+
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:left;padding:13px 9px;border-bottom:1px solid #e9edf2}
 th{color:#758094}
 .table-wrap{overflow-x:auto}
 .empty{text-align:center;color:#8490a0;padding:25px}
 .search{max-width:320px;margin-bottom:15px}
-.small{font-size:12px;color:#788496}
 .badge{padding:5px 8px;border-radius:20px;background:#e8f1ff;color:#245b8d;font-size:11px}
 .payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .payment-option{
  background:white;border:1px solid #dce2eb;border-radius:12px;
  padding:17px;display:flex;align-items:center;gap:12px;
- text-align:left;font-weight:bold;color:#26374b;
+ text-align:left;font-weight:bold;color:#26374b
 }
 .payment-option:hover{border-color:#234d78;background:#f4f8ff}
 .payment-logo{
  width:42px;height:42px;border-radius:9px;display:flex;
  align-items:center;justify-content:center;font-weight:bold;
- font-size:13px;flex-shrink:0;
+ font-size:13px;flex-shrink:0
 }
 .mtn{background:#ffcc00;color:#222}
 .moov{background:#e5f0ff;color:#1754a0}
@@ -115,6 +158,7 @@ th{color:#758094}
 .bank{background:#edf0f5;color:#293d59}
 #paymentMessage{margin-top:15px;font-size:13px;color:#245b8d}
 .trial{background:#fff5d8;padding:13px;border-radius:10px;font-size:13px;margin-bottom:18px}
+
 @media(max-width:900px){
  .sidebar{width:200px}
  .stats{grid-template-columns:repeat(2,1fr)}
@@ -125,7 +169,7 @@ th{color:#758094}
  .sidebar .brand{padding:5px 10px 10px}
  .nav-btn{width:auto;display:inline-block;padding:10px;font-size:12px}
  .sidebar-bottom{margin-top:8px}
- .main{padding:17px}
+ .main{padding:17px;background-attachment:scroll}
  .grid-two{grid-template-columns:1fr}
  .form-grid{grid-template-columns:1fr}
  .form-grid .full{grid-column:auto}
@@ -175,44 +219,38 @@ th{color:#758094}
    </p>
   </div>
   <p id="authMessage" class="message"></p>
-  <p class="notice">Version de démonstration : les comptes sont enregistrés sur ce navigateur. Pour une vraie sécurité et des comptes individuels, un serveur sera nécessaire.</p>
+  <p class="notice">Version de démonstration : les comptes sont enregistrés sur ce navigateur. Un serveur sera nécessaire pour sécuriser les comptes.</p>
  </div>
 </section>
 
 <!-- APPLICATION -->
 <div id="app" class="hidden">
-
  <aside class="sidebar">
   <div class="brand">Koto<span>Stock</span></div>
-
   <button class="nav-btn active" onclick="showPage('dashboard',this)">▦ Tableau de bord</button>
   <button class="nav-btn" onclick="showPage('products',this)">▤ Produits</button>
   <button class="nav-btn" onclick="showPage('sales',this)">▣ Ventes</button>
   <button class="nav-btn" onclick="showPage('subscription',this)">★ Abonnement</button>
-
   <div class="sidebar-bottom">
    <button class="nav-btn logout" onclick="logout()">↪ Déconnexion</button>
   </div>
  </aside>
 
  <main id="mainContent" class="main dashboard-bg">
-
   <div class="topbar">
    <h1 id="pageTitle">Tableau de bord</h1>
    <div class="user-label">Utilisateur : <strong id="userName"></strong></div>
   </div>
 
-  <!-- DASHBOARD -->
+  <!-- TABLEAU DE BORD -->
   <section id="dashboardPage">
    <div id="trialBanner" class="trial"></div>
-
    <div class="stats">
     <div class="stat"><p>Produits enregistrés</p><strong id="statProducts">0</strong></div>
     <div class="stat"><p>Stock total</p><strong id="statStock">0</strong></div>
     <div class="stat"><p>Nombre de ventes</p><strong id="statSales">0</strong></div>
     <div class="stat"><p>Chiffre d'affaires</p><strong id="statRevenue">0 FCFA</strong></div>
    </div>
-
    <div class="grid-two">
     <div class="panel">
      <h2>Bienvenue sur KotoStock</h2>
@@ -269,7 +307,7 @@ th{color:#758094}
     <form id="saleForm" class="form-grid">
      <div class="full">
       <label>Choisir un produit</label>
-      <select id="saleProduct" required style="width:100%;padding:13px;border:1px solid #dce1e9;border-radius:9px">
+      <select id="saleProduct" required>
        <option value="">Sélectionner un produit</option>
       </select>
      </div>
@@ -326,12 +364,11 @@ th{color:#758094}
     <p id="paymentMessage">Sélectionnez votre moyen de paiement.</p>
    </div>
   </section>
-
  </main>
 </div>
 
 <script>
-/* DONNEES : les anciennes clés sont conservées */
+/* DONNEES EXISTANTES CONSERVEES */
 const PRODUCTS_KEY = "kotoProducts";
 const SALES_KEY = "kotoSales";
 
@@ -348,19 +385,18 @@ let products = readData(PRODUCTS_KEY);
 let sales = readData(SALES_KEY);
 
 function saveProducts() {
- localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+ localStorage.setItem(PRODUCTS_KEY,JSON.stringify(products));
 }
 function saveSales() {
- localStorage.setItem(SALES_KEY, JSON.stringify(sales));
+ localStorage.setItem(SALES_KEY,JSON.stringify(sales));
 }
-
 function stockOf(p) {
  return Number(p.quantity ?? p.qty ?? 0);
 }
-function setStock(p, value) {
- if ("quantity" in p) p.quantity = value;
- else if ("qty" in p) p.qty = value;
- else p.quantity = value;
+function setStock(p,value) {
+ if("quantity" in p) p.quantity=value;
+ else if("qty" in p) p.qty=value;
+ else p.quantity=value;
 }
 function priceOf(p) {
  return Number(p.price ?? 0);
@@ -375,61 +411,61 @@ function saleAmount(s) {
  return Number(s.amount ?? s.total ?? 0);
 }
 function money(n) {
- return Number(n || 0).toLocaleString("fr-FR") + " FCFA";
+ return Number(n||0).toLocaleString("fr-FR")+" FCFA";
 }
 
 /* COMPTES DE DEMONSTRATION */
 function getUsers() {
- try { return JSON.parse(localStorage.getItem("kotoUsers") || "[]"); }
- catch(e) { return []; }
+ try{return JSON.parse(localStorage.getItem("kotoUsers")||"[]")}
+ catch(e){return []}
 }
 function saveUsers(users) {
- localStorage.setItem("kotoUsers", JSON.stringify(users));
+ localStorage.setItem("kotoUsers",JSON.stringify(users));
 }
 function showLogin() {
  document.getElementById("registerArea").classList.add("hidden");
  document.getElementById("loginArea").classList.remove("hidden");
- document.getElementById("authMessage").textContent = "";
+ document.getElementById("authMessage").textContent="";
 }
 function showRegister() {
  document.getElementById("loginArea").classList.add("hidden");
  document.getElementById("registerArea").classList.remove("hidden");
- document.getElementById("authMessage").textContent = "";
+ document.getElementById("authMessage").textContent="";
 }
 function getCurrentUser() {
- try { return JSON.parse(sessionStorage.getItem("kotoCurrentUser") || "null"); }
- catch(e) { return null; }
+ try{return JSON.parse(sessionStorage.getItem("kotoCurrentUser")||"null")}
+ catch(e){return null}
 }
 function startApp(user) {
- sessionStorage.setItem("kotoCurrentUser", JSON.stringify(user));
+ sessionStorage.setItem("kotoCurrentUser",JSON.stringify(user));
  document.getElementById("loginScreen").classList.add("hidden");
  document.getElementById("app").classList.remove("hidden");
- document.getElementById("userName").textContent = user.prenom + " " + user.nom;
+ document.getElementById("userName").textContent=user.prenom+" "+user.nom;
  updateTrial();
  renderAll();
 }
+
 document.getElementById("registerForm").addEventListener("submit",function(e){
  e.preventDefault();
- const nom = document.getElementById("regNom").value.trim();
- const prenom = document.getElementById("regPrenom").value.trim();
- const code = document.getElementById("regCode").value;
- const users = getUsers();
+ const nom=document.getElementById("regNom").value.trim();
+ const prenom=document.getElementById("regPrenom").value.trim();
+ const code=document.getElementById("regCode").value;
+ const users=getUsers();
 
- if(code.length < 4) {
-  document.getElementById("authMessage").textContent = "Le code doit contenir au moins 4 caractères.";
+ if(code.length<4){
+  document.getElementById("authMessage").textContent="Le code doit contenir au moins 4 caractères.";
   return;
  }
- if(users.some(u => u.nom.toLowerCase() === nom.toLowerCase() && u.prenom.toLowerCase() === prenom.toLowerCase())) {
-  document.getElementById("authMessage").textContent = "Ce compte existe déjà. Connectez-vous.";
+ if(users.some(u=>u.nom.toLowerCase()===nom.toLowerCase()&&u.prenom.toLowerCase()===prenom.toLowerCase())){
+  document.getElementById("authMessage").textContent="Ce compte existe déjà. Connectez-vous.";
   return;
  }
 
- const user = {nom,prenom,code};
+ const user={nom,prenom,code};
  users.push(user);
  saveUsers(users);
 
- /* Début de l'essai gratuit sur ce navigateur */
- if(!localStorage.getItem("kotoTrialStart")) {
+ if(!localStorage.getItem("kotoTrialStart")){
   localStorage.setItem("kotoTrialStart",String(Date.now()));
  }
  startApp(user);
@@ -437,16 +473,18 @@ document.getElementById("registerForm").addEventListener("submit",function(e){
 
 document.getElementById("loginForm").addEventListener("submit",function(e){
  e.preventDefault();
- const nom = document.getElementById("loginNom").value.trim();
- const prenom = document.getElementById("loginPrenom").value.trim();
- const code = document.getElementById("loginCode").value;
- const user = getUsers().find(u =>
-  u.nom.toLowerCase() === nom.toLowerCase() &&
-  u.prenom.toLowerCase() === prenom.toLowerCase() &&
-  u.code === code
+ const nom=document.getElementById("loginNom").value.trim();
+ const prenom=document.getElementById("loginPrenom").value.trim();
+ const code=document.getElementById("loginCode").value;
+
+ const user=getUsers().find(u=>
+  u.nom.toLowerCase()===nom.toLowerCase()&&
+  u.prenom.toLowerCase()===prenom.toLowerCase()&&
+  u.code===code
  );
- if(!user) {
-  document.getElementById("authMessage").textContent = "Informations incorrectes.";
+
+ if(!user){
+  document.getElementById("authMessage").textContent="Informations incorrectes.";
   return;
  }
  startApp(user);
@@ -461,101 +499,90 @@ function logout() {
 
 /* NAVIGATION */
 function showPage(page,button) {
- const pages = ["dashboard","products","sales","subscription"];
- pages.forEach(p => document.getElementById(p+"Page").classList.add("hidden"));
+ ["dashboard","products","sales","subscription"].forEach(p=>
+  document.getElementById(p+"Page").classList.add("hidden")
+ );
  document.getElementById(page+"Page").classList.remove("hidden");
 
  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
  if(button) button.classList.add("active");
 
- const titles = {
+ const titles={
   dashboard:"Tableau de bord",
   products:"Gestion des produits",
   sales:"Gestion des ventes",
   subscription:"Abonnement KotoStock"
  };
- document.getElementById("pageTitle").textContent = titles[page];
+ document.getElementById("pageTitle").textContent=titles[page];
 
- const main = document.getElementById("mainContent");
+ const main=document.getElementById("mainContent");
  main.classList.remove("dashboard-bg","products-bg","sales-bg");
  if(page==="dashboard") main.classList.add("dashboard-bg");
  if(page==="products") main.classList.add("products-bg");
  if(page==="sales") main.classList.add("sales-bg");
-
  if(page==="sales") renderSaleOptions();
 }
 
 /* PRODUITS */
 document.getElementById("productForm").addEventListener("submit",function(e){
  e.preventDefault();
- const name = document.getElementById("productName").value.trim();
- const price = Number(document.getElementById("productPrice").value);
- const quantity = Number(document.getElementById("productQty").value);
+ const name=document.getElementById("productName").value.trim();
+ const price=Number(document.getElementById("productPrice").value);
+ const quantity=Number(document.getElementById("productQty").value);
+ if(!name||price<=0||quantity<0)return;
 
- if(!name || price<=0 || quantity<0) return;
-
- products.push({
-  id:Date.now(),
-  name:name,
-  price:price,
-  quantity:quantity
- });
+ products.push({id:Date.now(),name,price,quantity});
  saveProducts();
  this.reset();
  renderAll();
 });
 
 function deleteProduct(id) {
- if(!confirm("Supprimer ce produit ?")) return;
- products = products.filter(p=>String(p.id)!==String(id));
+ if(!confirm("Supprimer ce produit ?"))return;
+ products=products.filter(p=>String(p.id)!==String(id));
  saveProducts();
  renderAll();
 }
 
 function renderProducts() {
- const search = (document.getElementById("productSearch").value || "").toLowerCase();
- const list = products.filter(p=>(p.name||"").toLowerCase().includes(search));
- const tbody = document.getElementById("productTable");
+ const search=(document.getElementById("productSearch").value||"").toLowerCase();
+ const list=products.filter(p=>(p.name||"").toLowerCase().includes(search));
+ const tbody=document.getElementById("productTable");
 
- if(!list.length) {
+ if(!list.length){
   tbody.innerHTML='<tr><td colspan="4" class="empty">Aucun produit trouvé.</td></tr>';
   return;
  }
- tbody.innerHTML = list.map(p=>`
+
+ tbody.innerHTML=list.map(p=>`
  <tr>
-  <td>${escapeHTML(p.name || "")}</td>
+  <td>${escapeHTML(p.name||"")}</td>
   <td>${money(priceOf(p))}</td>
   <td>${stockOf(p)}</td>
-  <td><button class="action danger" onclick="deleteProduct('${String(p.id).replace(/'/g,"")}')">Supprimer</button></td>
+  <td><button class="action danger" onclick="deleteProduct('${escapeHTML(String(p.id))}')">Supprimer</button></td>
  </tr>`).join("");
 }
 document.getElementById("productSearch").addEventListener("input",renderProducts);
 
 /* VENTES */
 function renderSaleOptions() {
- const select = document.getElementById("saleProduct");
- select.innerHTML = '<option value="">Sélectionner un produit</option>';
+ const select=document.getElementById("saleProduct");
+ select.innerHTML='<option value="">Sélectionner un produit</option>';
  products.forEach(p=>{
-  select.innerHTML += `<option value="${escapeHTML(String(p.id))}">${escapeHTML(p.name)} — Stock : ${stockOf(p)}</option>`;
+  select.innerHTML+=`<option value="${escapeHTML(String(p.id))}">${escapeHTML(p.name)} — Stock : ${stockOf(p)}</option>`;
  });
 }
 
 document.getElementById("saleForm").addEventListener("submit",function(e){
  e.preventDefault();
- const id = document.getElementById("saleProduct").value;
- const qty = Number(document.getElementById("saleQty").value);
- const product = products.find(p=>String(p.id)===String(id));
+ const id=document.getElementById("saleProduct").value;
+ const qty=Number(document.getElementById("saleQty").value);
+ const product=products.find(p=>String(p.id)===String(id));
 
- if(!product) {
-  alert("Choisissez un produit.");
-  return;
- }
- if(qty<=0 || qty>stockOf(product)) {
-  alert("Quantité invalide ou stock insuffisant.");
-  return;
- }
+ if(!product){alert("Choisissez un produit.");return}
+ if(qty<=0||qty>stockOf(product)){alert("Quantité invalide ou stock insuffisant.");return}
 
- const amount = priceOf(product)*qty;
+ const amount=priceOf(product)*qty;
  setStock(product,stockOf(product)-qty);
 
  sales.unshift({
@@ -574,27 +601,27 @@ document.getElementById("saleForm").addEventListener("submit",function(e){
 });
 
 function renderSales() {
- const tbody = document.getElementById("salesTable");
- if(!sales.length) {
+ const tbody=document.getElementById("salesTable");
+ if(!sales.length){
   tbody.innerHTML='<tr><td colspan="4" class="empty">Aucune vente enregistrée.</td></tr>';
   return;
  }
- tbody.innerHTML = sales.map(s=>`
+ tbody.innerHTML=sales.map(s=>`
  <tr>
   <td>${escapeHTML(saleName(s))}</td>
   <td>${saleQuantity(s)}</td>
   <td>${money(saleAmount(s))}</td>
-  <td>${escapeHTML(String(s.date || ""))}</td>
+  <td>${escapeHTML(String(s.date||""))}</td>
  </tr>`).join("");
 }
 
 /* TABLEAU DE BORD */
 function renderDashboard() {
- document.getElementById("statProducts").textContent = products.length;
- document.getElementById("statStock").textContent =
+ document.getElementById("statProducts").textContent=products.length;
+ document.getElementById("statStock").textContent=
   products.reduce((sum,p)=>sum+stockOf(p),0);
- document.getElementById("statSales").textContent = sales.length;
- document.getElementById("statRevenue").textContent =
+ document.getElementById("statSales").textContent=sales.length;
+ document.getElementById("statRevenue").textContent=
   money(sales.reduce((sum,s)=>sum+saleAmount(s),0));
 }
 function renderAll() {
@@ -604,40 +631,37 @@ function renderAll() {
  renderSaleOptions();
 }
 
-/* ABONNEMENT ET ESSAI */
+/* ESSAI GRATUIT */
 function trialDaysLeft() {
- const start = Number(localStorage.getItem("kotoTrialStart"));
- if(!start) return 3;
- const elapsed = Date.now()-start;
- return Math.max(0,3-Math.floor(elapsed/86400000));
+ const start=Number(localStorage.getItem("kotoTrialStart"));
+ if(!start)return 3;
+ return Math.max(0,3-Math.floor((Date.now()-start)/86400000));
 }
 function updateTrial() {
- const days = trialDaysLeft();
- const text = days>0
-  ? "Votre essai gratuit est en cours. Il vous reste "+days+" jour(s)."
-  : "Votre période d'essai de 3 jours est terminée. Choisissez un moyen de paiement pour l'abonnement Premium.";
- document.getElementById("trialBanner").textContent = text;
- document.getElementById("subscriptionStatus").textContent = text;
+ const days=trialDaysLeft();
+ const text=days>0
+  ?"Votre essai gratuit est en cours. Il vous reste "+days+" jour(s)."
+  :"Votre période d'essai de 3 jours est terminée. Choisissez un moyen de paiement pour l'abonnement Premium.";
+ document.getElementById("trialBanner").textContent=text;
+ document.getElementById("subscriptionStatus").textContent=text;
 }
 
-/* PAIEMENTS : interface de sélection uniquement */
+/* CHOIX DU PAIEMENT */
 function choosePayment(method) {
- document.getElementById("paymentMessage").textContent =
-  method+" sélectionné pour l'abonnement de 1 500 FCFA/mois. Le paiement réel sera activé après intégration d'un prestataire et vérification sécurisée de la transaction.";
+ document.getElementById("paymentMessage").textContent=
+  method+" sélectionné pour l'abonnement de 1 500 FCFA/mois. Le paiement réel nécessite une intégration sécurisée.";
 }
 
-/* PROTECTION DES TEXTES AFFICHES */
+/* SECURITE D'AFFICHAGE */
 function escapeHTML(value) {
- return String(value).replace(/[&<>"']/g, c => ({
+ return String(value).replace(/[&<>"']/g,c=>({
   "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
  }[c]));
 }
 
-/* REOUVRIR LA SESSION SI ELLE EXISTE */
-const savedUser = getCurrentUser();
-if(savedUser) {
- startApp(savedUser);
-}
+/* SESSION */
+const savedUser=getCurrentUser();
+if(savedUser)startApp(savedUser);
 </script>
 
 </body>
