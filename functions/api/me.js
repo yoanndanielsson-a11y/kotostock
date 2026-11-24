@@ -13,7 +13,6 @@ function json(data, status = 200) {
 
 export async function onRequestGet({ request, env }) {
   try {
-    // 1. Vérifier l'identité de l'utilisateur.
     const account = await getAuthenticatedUser(request, env);
 
     if (!account) {
@@ -23,12 +22,23 @@ export async function onRequestGet({ request, env }) {
       }, 401);
     }
 
-    // 2. Récupérer l'abonnement de sa boutique.
     const subscription = await env.DB.prepare(`
       SELECT
+        plan,
         status,
         trial_ends_at,
-        expires_at
+        expires_at,
+        CASE
+          WHEN status = 'trial'
+            AND julianday(trial_ends_at) > julianday('now')
+            THEN 1
+
+          WHEN status = 'active'
+            AND julianday(expires_at) > julianday('now')
+            THEN 1
+
+          ELSE 0
+        END AS is_active
       FROM subscriptions
       WHERE shop_id = ?
       LIMIT 1
@@ -36,7 +46,6 @@ export async function onRequestGet({ request, env }) {
       .bind(account.shop_id)
       .first();
 
-    // 3. Renvoyer uniquement les informations nécessaires.
     return json({
       success: true,
 
@@ -52,7 +61,9 @@ export async function onRequestGet({ request, env }) {
       },
 
       subscription: {
+        plan: subscription?.plan || null,
         status: subscription?.status || null,
+        active: subscription?.is_active === 1,
         trialEndsAt: subscription?.trial_ends_at || null,
         expiresAt: subscription?.expires_at || null
       }
