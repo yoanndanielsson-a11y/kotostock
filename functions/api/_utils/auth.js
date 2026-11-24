@@ -15,7 +15,6 @@ async function sha256(value) {
 function getSessionToken(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
 
-  // Refuser les en-têtes de cookies anormalement volumineux.
   if (cookieHeader.length > 8192) {
     return null;
   }
@@ -32,41 +31,46 @@ function getSessionToken(request) {
 
   const token = sessionCookie.trim().slice("koto_session=".length);
 
-  // Le jeton doit contenir exactement 64 caractères hexadécimaux.
-  if (!/^[a-f0-9]{64}$/.test(token)) {
-    return null;
-  }
-
-  return token;
+  return /^[a-f0-9]{64}$/.test(token) ? token : null;
 }
 
 export async function getAuthenticatedUser(request, env) {
-  const token = getSessionToken(request);
+  try {
+    const token = getSessionToken(request);
 
-  if (!token) {
+    if (!token) {
+      return null;
+    }
+
+    const tokenHash = await sha256(token);
+    const now = new Date().toISOString();
+
+    const user = await env.DB.prepare(`
+      SELECT
+        u.id AS user_id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        s.id AS shop_id,
+        s.name AS shop_name
+      FROM sessions se
+      INNER JOIN users u ON u.id = se.user_id
+      INNER JOIN shops s ON s.user_id = u.id
+      WHERE se.token_hash = ?
+        AND se.expires_at > ?
+      LIMIT 1
+    `)
+      .bind(tokenHash, now)
+      .first();
+
+    if (!user || !user.user_id || !user.shop_id) {
+      return null;
+    }
+
+    return user;
+
+  } catch (error) {
+    console.error("Erreur d'authentification KotoStock:", error);
     return null;
   }
-
-  const tokenHash = await sha256(token);
-  const now = new Date().toISOString();
-
-  const user = await env.DB.prepare(`
-    SELECT
-      u.id AS user_id,
-      u.first_name,
-      u.last_name,
-      u.email,
-      s.id AS shop_id,
-      s.name AS shop_name
-    FROM sessions se
-    JOIN users u ON u.id = se.user_id
-    JOIN shops s ON s.user_id = u.id
-    WHERE se.token_hash = ?
-      AND se.expires_at > ?
-    LIMIT 1
-  `)
-    .bind(tokenHash, now)
-    .first();
-
-  return user || null;
 }
