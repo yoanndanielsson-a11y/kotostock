@@ -12,35 +12,86 @@ async function sha256(value) {
     .join("");
 }
 
+function getSessionToken(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
+
+  if (cookieHeader.length > 8192) {
+    return null;
+  }
+
+  const cookies = cookieHeader.split(";");
+
+  const sessionCookie = cookies.find(cookie =>
+    cookie.trim().startsWith("koto_session=")
+  );
+
+  if (!sessionCookie) {
+    return null;
+  }
+
+  const token = sessionCookie.trim().slice("koto_session=".length);
+
+  return /^[a-f0-9]{64}$/.test(token) ? token : null;
+}
+
+function json(data, status = 200, headers = {}) {
+  return Response.json(data, {
+    status,
+    headers: {
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+      ...headers
+    }
+  });
+}
+
 export async function onRequestPost({ request, env }) {
+  const clearCookie =
+    "koto_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0";
+
   try {
-    const cookie = request.headers.get("Cookie") || "";
-    const match = cookie.match(/(?:^|;\s*)koto_session=([a-f0-9]{64})(?:;|$)/);
+    // Vérifier l'origine de la requête.
+    const origin = request.headers.get("Origin");
+    const expectedOrigin = new URL(request.url).origin;
 
-    if (match) {
-      const tokenHash = await sha256(match[1]);
+    if (!origin || origin !== expectedOrigin) {
+      return json({
+        success: false,
+        message: "Requête non autorisée."
+      }, 403, {
+        "Set-Cookie": clearCookie
+      });
+    }
 
-      await env.DB
-        .prepare("DELETE FROM sessions WHERE token_hash = ?")
+    const token = getSessionToken(request);
+
+    // Supprimer la session correspondante.
+    if (token) {
+      const tokenHash = await sha256(token);
+
+      await env.DB.prepare(`
+        DELETE FROM sessions
+        WHERE token_hash = ?
+      `)
         .bind(tokenHash)
         .run();
     }
 
-    return Response.json({
+    return json({
       success: true,
       message: "Déconnexion réussie."
-    }, {
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store",
-        "Set-Cookie": "koto_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0"
-      }
+    }, 200, {
+      "Set-Cookie": clearCookie
     });
 
   } catch (error) {
-    return Response.json({
+    console.error("Erreur de déconnexion KotoStock:", error);
+
+    return json({
       success: false,
       message: "Impossible de terminer la session."
-    }, { status: 500 });
+    }, 500, {
+      "Set-Cookie": clearCookie
+    });
   }
 }
