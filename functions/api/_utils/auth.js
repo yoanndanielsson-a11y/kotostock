@@ -12,17 +12,45 @@ async function sha256(value) {
     .join("");
 }
 
-export async function getAuthenticatedUser(request, env) {
-  const cookie = request.headers.get("Cookie") || "";
-  const match = cookie.match(
-    /(?:^|;\s*)koto_session=([a-f0-9]{64})(?:;|$)/
+function getSessionToken(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
+
+  // Refuser les en-têtes de cookies anormalement volumineux.
+  if (cookieHeader.length > 8192) {
+    return null;
+  }
+
+  const cookies = cookieHeader.split(";");
+
+  const sessionCookie = cookies.find(cookie =>
+    cookie.trim().startsWith("koto_session=")
   );
 
-  if (!match) return null;
+  if (!sessionCookie) {
+    return null;
+  }
 
-  const tokenHash = await sha256(match[1]);
+  const token = sessionCookie.trim().slice("koto_session=".length);
 
-  return await env.DB.prepare(`
+  // Le jeton doit contenir exactement 64 caractères hexadécimaux.
+  if (!/^[a-f0-9]{64}$/.test(token)) {
+    return null;
+  }
+
+  return token;
+}
+
+export async function getAuthenticatedUser(request, env) {
+  const token = getSessionToken(request);
+
+  if (!token) {
+    return null;
+  }
+
+  const tokenHash = await sha256(token);
+  const now = new Date().toISOString();
+
+  const user = await env.DB.prepare(`
     SELECT
       u.id AS user_id,
       u.first_name,
@@ -36,5 +64,9 @@ export async function getAuthenticatedUser(request, env) {
     WHERE se.token_hash = ?
       AND se.expires_at > ?
     LIMIT 1
-  `).bind(tokenHash, new Date().toISOString()).first();
+  `)
+    .bind(tokenHash, now)
+    .first();
+
+  return user || null;
 }
