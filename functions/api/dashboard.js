@@ -22,6 +22,7 @@ export async function onRequestGet({ request, env }) {
       }, 401);
     }
 
+    // Récupération des statistiques du magasin
     const stats = await env.DB.prepare(`
       SELECT
         (SELECT COUNT(*)
@@ -60,12 +61,37 @@ export async function onRequestGet({ request, env }) {
       throw new Error("Statistiques indisponibles.");
     }
 
+    // Récupération de l'abonnement
+    const subscription = await env.DB.prepare(`
+      SELECT
+        plan,
+        status,
+        trial_ends_at,
+        expires_at,
+        CASE
+          WHEN status = 'trial'
+            AND julianday(trial_ends_at) > julianday('now')
+            THEN 1
+
+          WHEN status = 'active'
+            AND julianday(expires_at) > julianday('now')
+            THEN 1
+
+          ELSE 0
+        END AS is_active
+      FROM subscriptions
+      WHERE shop_id = ?
+      LIMIT 1
+    `).bind(user.shop_id).first();
+
     return json({
       success: true,
+
       shop: {
         id: user.shop_id,
         name: user.shop_name
       },
+
       statistics: {
         productCount: stats.product_count,
         totalStock: stats.total_stock,
@@ -73,6 +99,20 @@ export async function onRequestGet({ request, env }) {
         revenue: stats.revenue,
         outOfStock: stats.out_of_stock,
         lowStock: stats.low_stock
+      },
+
+      subscription: subscription ? {
+        plan: subscription.plan,
+        status: subscription.status,
+        active: subscription.is_active === 1,
+        trialEndsAt: subscription.trial_ends_at,
+        expiresAt: subscription.expires_at
+      } : {
+        plan: null,
+        status: "unavailable",
+        active: false,
+        trialEndsAt: null,
+        expiresAt: null
       }
     });
 
