@@ -5,7 +5,7 @@ function json(data, status = 200) {
   return Response.json(data, {
     status,
     headers: {
-      "Cache-Control": "no-store, private",
+      "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff"
     }
   });
@@ -36,7 +36,7 @@ export async function onRequestGet({ request, env }) {
       .bind(account.shop_id)
       .first();
 
-    // 3. Retourner les informations nécessaires à l'application.
+    // 3. Renvoyer uniquement les informations nécessaires.
     return json({
       success: true,
 
