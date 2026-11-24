@@ -13,7 +13,6 @@ function json(data, status = 200) {
   });
 }
 
-// Vérifier l'origine des opérations qui modifient les données.
 function checkOrigin(request) {
   const origin = request.headers.get("Origin");
 
@@ -26,7 +25,6 @@ function checkOrigin(request) {
   }
 }
 
-// Lire un JSON de taille limitée.
 async function readJson(request) {
   const contentType = request.headers.get("Content-Type") || "";
 
@@ -64,16 +62,68 @@ async function readJson(request) {
 }
 
 function validNumber(value) {
-  return (
-    value !== undefined &&
-    value !== null &&
-    value !== "" &&
-    Number.isSafeInteger(Number(value)) &&
-    Number(value) >= 0
-  );
+  if (typeof value === "number") {
+    return Number.isSafeInteger(value) && value >= 0;
+  }
+
+  if (typeof value === "string") {
+    return /^\d+$/.test(value.trim()) &&
+      Number.isSafeInteger(Number(value)) &&
+      Number(value) >= 0;
+  }
+
+  return false;
 }
 
-// GET : afficher uniquement les produits de la boutique connectée.
+function subscriptionIsActive(subscription) {
+  if (!subscription) return false;
+
+  const now = Date.now();
+
+  if (subscription.status === "trial") {
+    const end = Date.parse(subscription.trial_ends_at || "");
+
+    return Number.isFinite(end) && end > now;
+  }
+
+  if (subscription.status === "active") {
+    const end = Date.parse(subscription.expires_at || "");
+
+    return Number.isFinite(end) && end > now;
+  }
+
+  return false;
+}
+
+async function hasActiveSubscription(env, shopId) {
+  const subscription = await env.DB.prepare(`
+    SELECT status, trial_ends_at, expires_at
+    FROM subscriptions
+    WHERE shop_id = ?
+    LIMIT 1
+  `)
+    .bind(shopId)
+    .first();
+
+  return subscriptionIsActive(subscription);
+}
+
+async function requireActiveSubscription(env, shopId) {
+  const active = await hasActiveSubscription(env, shopId);
+
+  if (!active) {
+    return json({
+      success: false,
+      code: "SUBSCRIPTION_REQUIRED",
+      message: "Votre essai gratuit est terminé. Un abonnement actif est nécessaire pour modifier vos produits."
+    }, 403);
+  }
+
+  return null;
+}
+
+// GET : consulter les produits de sa boutique.
+// La consultation reste possible après expiration.
 export async function onRequestGet({ request, env }) {
   try {
     const user = await getAuthenticatedUser(request, env);
@@ -134,6 +184,13 @@ export async function onRequestPost({ request, env }) {
       }, 401);
     }
 
+    const subscriptionError = await requireActiveSubscription(
+      env,
+      user.shop_id
+    );
+
+    if (subscriptionError) return subscriptionError;
+
     const parsed = await readJson(request);
 
     if (parsed.error) {
@@ -152,9 +209,6 @@ export async function onRequestPost({ request, env }) {
     const category = typeof body.category === "string"
       ? body.category.trim()
       : "";
-
-    const price = Number(body.sale_price);
-    const quantity = Number(body.quantity);
 
     if (!name || name.length > 120) {
       return json({
@@ -194,8 +248,8 @@ export async function onRequestPost({ request, env }) {
         user.shop_id,
         name,
         category || null,
-        price,
-        quantity
+        Number(body.sale_price),
+        Number(body.quantity)
       )
       .run();
 
@@ -215,7 +269,7 @@ export async function onRequestPost({ request, env }) {
   }
 }
 
-// PUT : modifier uniquement un produit de sa boutique.
+// PUT : modifier un produit de sa boutique.
 export async function onRequestPut({ request, env }) {
   try {
     if (!checkOrigin(request)) {
@@ -234,6 +288,13 @@ export async function onRequestPut({ request, env }) {
       }, 401);
     }
 
+    const subscriptionError = await requireActiveSubscription(
+      env,
+      user.shop_id
+    );
+
+    if (subscriptionError) return subscriptionError;
+
     const parsed = await readJson(request);
 
     if (parsed.error) {
@@ -244,7 +305,6 @@ export async function onRequestPut({ request, env }) {
     }
 
     const body = parsed.body;
-
     const id = Number(body.id);
 
     const name = typeof body.name === "string"
@@ -254,9 +314,6 @@ export async function onRequestPut({ request, env }) {
     const category = typeof body.category === "string"
       ? body.category.trim()
       : "";
-
-    const price = Number(body.sale_price);
-    const quantity = Number(body.quantity);
 
     if (
       !Number.isSafeInteger(id) ||
@@ -285,18 +342,29 @@ export async function onRequestPut({ request, env }) {
       .bind(
         name,
         category || null,
-        price,
-        quantity,
+        Number(body.sale_price),
+        Number(body.quantity),
         id,
         user.shop_id
       )
       .run();
 
     if (!result.meta.changes) {
-      return json({
-        success: false,
-        message: "Produit introuvable ou inchangé."
-      }, 404);
+      const existing = await env.DB.prepare(`
+        SELECT id
+        FROM products
+        WHERE id = ? AND shop_id = ?
+        LIMIT 1
+      `)
+        .bind(id, user.shop_id)
+        .first();
+
+      if (!existing) {
+        return json({
+          success: false,
+          message: "Produit introuvable."
+        }, 404);
+      }
     }
 
     return json({
@@ -314,7 +382,7 @@ export async function onRequestPut({ request, env }) {
   }
 }
 
-// DELETE : supprimer uniquement un produit de sa boutique.
+// DELETE : supprimer un produit sans effacer son historique de ventes.
 export async function onRequestDelete({ request, env }) {
   try {
     if (!checkOrigin(request)) {
@@ -332,6 +400,13 @@ export async function onRequestDelete({ request, env }) {
         message: "Connexion requise."
       }, 401);
     }
+
+    const subscriptionError = await requireActiveSubscription(
+      env,
+      user.shop_id
+    );
+
+    if (subscriptionError) return subscriptionError;
 
     const parsed = await readJson(request);
 
@@ -351,52 +426,41 @@ export async function onRequestDelete({ request, env }) {
       }, 400);
     }
 
-    // Vérifier que le produit appartient à cette boutique.
-    const product = await env.DB.prepare(`
-      SELECT id
-      FROM products
-      WHERE id = ? AND shop_id = ?
-      LIMIT 1
-    `)
-      .bind(id, user.shop_id)
-      .first();
-
-    if (!product) {
-      return json({
-        success: false,
-        message: "Produit introuvable."
-      }, 404);
-    }
-
-    // Préserver l'historique des ventes.
-    const existingSales = await env.DB.prepare(`
-      SELECT id
-      FROM sales
-      WHERE product_id = ?
-      LIMIT 1
-    `)
-      .bind(id)
-      .first();
-
-    if (existingSales) {
-      return json({
-        success: false,
-        message: "Ce produit possède déjà des ventes. Il ne peut pas être supprimé afin de préserver l'historique."
-      }, 409);
-    }
-
+    // La suppression est refusée si une vente référence le produit.
     const result = await env.DB.prepare(`
       DELETE FROM products
-      WHERE id = ? AND shop_id = ?
+      WHERE id = ?
+        AND shop_id = ?
+        AND NOT EXISTS (
+          SELECT 1
+          FROM sales
+          WHERE sales.product_id = products.id
+        )
     `)
       .bind(id, user.shop_id)
       .run();
 
     if (!result.meta.changes) {
+      const product = await env.DB.prepare(`
+        SELECT id
+        FROM products
+        WHERE id = ? AND shop_id = ?
+        LIMIT 1
+      `)
+        .bind(id, user.shop_id)
+        .first();
+
+      if (!product) {
+        return json({
+          success: false,
+          message: "Produit introuvable."
+        }, 404);
+      }
+
       return json({
         success: false,
-        message: "Produit introuvable."
-      }, 404);
+        message: "Ce produit possède déjà des ventes. Il ne peut pas être supprimé afin de préserver l'historique."
+      }, 409);
     }
 
     return json({
