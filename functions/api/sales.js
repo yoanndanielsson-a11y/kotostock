@@ -61,7 +61,39 @@ async function readJson(request) {
   return { body };
 }
 
-// GET : consulter les ventes de la boutique connectée.
+function subscriptionIsActive(subscription) {
+  if (!subscription) return false;
+
+  const now = Date.now();
+
+  if (subscription.status === "trial") {
+    const end = Date.parse(subscription.trial_ends_at || "");
+    return Number.isFinite(end) && end > now;
+  }
+
+  if (subscription.status === "active") {
+    const end = Date.parse(subscription.expires_at || "");
+    return Number.isFinite(end) && end > now;
+  }
+
+  return false;
+}
+
+async function hasActiveSubscription(env, shopId) {
+  const subscription = await env.DB.prepare(`
+    SELECT status, trial_ends_at, expires_at
+    FROM subscriptions
+    WHERE shop_id = ?
+    LIMIT 1
+  `)
+    .bind(shopId)
+    .first();
+
+  return subscriptionIsActive(subscription);
+}
+
+// GET : consulter l'historique des ventes.
+// L'historique reste accessible après expiration.
 export async function onRequestGet({ request, env }) {
   try {
     const user = await getAuthenticatedUser(request, env);
@@ -111,7 +143,6 @@ export async function onRequestGet({ request, env }) {
 // POST : enregistrer une vente.
 export async function onRequestPost({ request, env }) {
   try {
-    // 1. Vérifier l'origine.
     if (!checkOrigin(request)) {
       return json({
         success: false,
@@ -119,7 +150,6 @@ export async function onRequestPost({ request, env }) {
       }, 403);
     }
 
-    // 2. Vérifier la session.
     const user = await getAuthenticatedUser(request, env);
 
     if (!user) {
@@ -129,7 +159,17 @@ export async function onRequestPost({ request, env }) {
       }, 401);
     }
 
-    // 3. Lire les données.
+    // Vérifier l'abonnement avant toute nouvelle vente.
+    const active = await hasActiveSubscription(env, user.shop_id);
+
+    if (!active) {
+      return json({
+        success: false,
+        code: "SUBSCRIPTION_REQUIRED",
+        message: "Votre essai gratuit est terminé. Un abonnement actif est nécessaire pour enregistrer de nouvelles ventes."
+      }, 403);
+    }
+
     const parsed = await readJson(request);
 
     if (parsed.error) {
@@ -162,7 +202,6 @@ export async function onRequestPost({ request, env }) {
       }, 400);
     }
 
-    // 4. Vérifier que le produit appartient à la boutique.
     const product = await env.DB.prepare(`
       SELECT id, name, sale_price, quantity
       FROM products
@@ -202,7 +241,6 @@ export async function onRequestPost({ request, env }) {
       }, 409);
     }
 
-    // 5. Vérifier le montant total.
     const total = unitPrice * quantity;
 
     if (!Number.isSafeInteger(total)) {
@@ -212,12 +250,9 @@ export async function onRequestPost({ request, env }) {
       }, 400);
     }
 
-    // 6. Diminuer le stock et enregistrer la vente
-    // dans une seule opération batch D1.
-    //
-    // Le prix est également vérifié dans UPDATE :
-    // si le prix change entre la lecture et le batch,
-    // la vente ne sera pas enregistrée avec un ancien prix.
+    // Vérification du stock, du prix et de l'abonnement
+    // au moment de la modification du stock.
+    const now = new Date().toISOString();
 
     const results = await env.DB.batch([
       env.DB.prepare(`
@@ -227,12 +262,25 @@ export async function onRequestPost({ request, env }) {
           AND shop_id = ?
           AND quantity >= ?
           AND sale_price = ?
+          AND EXISTS (
+            SELECT 1
+            FROM subscriptions
+            WHERE shop_id = ?
+              AND (
+                (status = 'trial' AND trial_ends_at > ?)
+                OR
+                (status = 'active' AND expires_at > ?)
+              )
+          )
       `).bind(
         quantity,
         productId,
         user.shop_id,
         quantity,
-        unitPrice
+        unitPrice,
+        user.shop_id,
+        now,
+        now
       ),
 
       env.DB.prepare(`
@@ -260,11 +308,10 @@ export async function onRequestPost({ request, env }) {
     ) {
       return json({
         success: false,
-        message: "Le stock ou le prix a changé. Actualisez les données puis réessayez."
+        message: "Le stock, le prix ou l'abonnement a changé. Actualisez les données puis réessayez."
       }, 409);
     }
 
-    // 7. Confirmer l'enregistrement.
     return json({
       success: true,
       message: "Vente enregistrée avec succès.",
