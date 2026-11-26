@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -359,12 +358,16 @@ tbody tr:hover{background:#fafbff}
 
       <form id="loginForm">
         <div class="field">
-          <label>Adresse e-mail</label>
-          <input id="loginEmail" type="email" required autocomplete="email" placeholder="exemple@email.com">
+          <label>Prénom</label>
+          <input id="loginFirstName" required autocomplete="given-name" placeholder="Votre prénom">
         </div>
         <div class="field">
-          <label>Mot de passe</label>
-          <input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Votre mot de passe">
+          <label>Nom</label>
+          <input id="loginLastName" required autocomplete="family-name" placeholder="Votre nom">
+        </div>
+        <div class="field">
+          <label>Code secret</label>
+          <input id="loginSecretCode" type="password" required minlength="12" autocomplete="current-password" placeholder="Votre code secret (12 caractères minimum)">
         </div>
         <button class="primary-btn auth-submit" type="submit">Se connecter</button>
       </form>
@@ -379,12 +382,8 @@ tbody tr:hover{background:#fafbff}
           <input id="lastName" required autocomplete="family-name" placeholder="Votre nom">
         </div>
         <div class="field">
-          <label>Adresse e-mail</label>
-          <input id="registerEmail" type="email" required autocomplete="email" placeholder="exemple@email.com">
-        </div>
-        <div class="field">
-          <label>Mot de passe</label>
-          <input id="registerPassword" type="password" required minlength="8" autocomplete="new-password" placeholder="8 caractères minimum">
+          <label>Code secret</label>
+          <input id="registerSecretCode" type="password" required minlength="12" autocomplete="new-password" placeholder="Choisissez un code secret (12 caractères minimum)">
         </div>
         <button class="primary-btn auth-submit" type="submit">Créer mon compte</button>
       </form>
@@ -448,7 +447,7 @@ tbody tr:hover{background:#fafbff}
             <h1>Bonjour <span id="welcomeName">!</span> 👋</h1>
             <p>Voici le résumé de votre activité commerciale.</p>
           </div>
-          <button class="primary-btn" onclick="openSaleModal()">＋ Nouvelle vente</button>
+                    <button class="primary-btn" onclick="openSaleModal()">＋ Nouvelle vente</button>
         </div>
 
         <div class="stats-grid">
@@ -747,16 +746,24 @@ function showAuth(type){
 
 document.getElementById("loginForm").addEventListener("submit",async event=>{
   event.preventDefault();
+
+  const firstName=document.getElementById("loginFirstName").value.trim();
+  const lastName=document.getElementById("loginLastName").value.trim();
+  const secretCode=document.getElementById("loginSecretCode").value;
+
+  if(secretCode.length<12){
+    showMessage("authMessage","Le code secret doit contenir au moins 12 caractères.");
+    return;
+  }
+
   showMessage("authMessage","Connexion en cours...","success");
-  const button=event.submitter;
+  const button=event.submitter || document.querySelector("#loginForm button[type='submit']");
   button.disabled=true;
+
   try{
     await apiRequest("/login",{
       method:"POST",
-      body:JSON.stringify({
-        email:document.getElementById("loginEmail").value.trim(),
-        password:document.getElementById("loginPassword").value
-      })
+      body:JSON.stringify({firstName,lastName,secretCode})
     });
     await loadApplication();
   }catch(error){
@@ -768,23 +775,24 @@ document.getElementById("loginForm").addEventListener("submit",async event=>{
 
 document.getElementById("registerForm").addEventListener("submit",async event=>{
   event.preventDefault();
-  const password=document.getElementById("registerPassword").value;
-  if(password.length<8){
-    showMessage("authMessage","Le mot de passe doit contenir au moins 8 caractères.");
+
+  const firstName=document.getElementById("firstName").value.trim();
+  const lastName=document.getElementById("lastName").value.trim();
+  const secretCode=document.getElementById("registerSecretCode").value;
+
+  if(secretCode.length<12){
+    showMessage("authMessage","Le code secret doit contenir au moins 12 caractères.");
     return;
   }
+
   showMessage("authMessage","Création du compte en cours...","success");
-  const button=event.submitter;
+  const button=event.submitter || document.querySelector("#registerForm button[type='submit']");
   button.disabled=true;
+
   try{
     await apiRequest("/register",{
       method:"POST",
-      body:JSON.stringify({
-        firstName:document.getElementById("firstName").value.trim(),
-        lastName:document.getElementById("lastName").value.trim(),
-        email:document.getElementById("registerEmail").value.trim(),
-        password
-      })
+      body:JSON.stringify({firstName,lastName,secretCode})
     });
     await loadApplication();
   }catch(error){
@@ -836,7 +844,7 @@ async function loadApplication(){
 
   const firstName=currentUser.first_name || currentUser.firstName || "Utilisateur";
   const lastName=currentUser.last_name || currentUser.lastName || "";
-  const email=currentUser.email || "";
+  const email="Compte KotoStock";
   const fullName=(firstName+" "+lastName).trim();
 
   document.getElementById("sidebarUser").textContent=fullName;
@@ -888,8 +896,7 @@ async function refreshData(){
     refreshInProgress=false;
   }
 }
-
-/* SYNCHRONISATION ENTRE APPAREILS */
+  /* SYNCHRONISATION ENTRE APPAREILS */
 function hasOpenModal(){
   return ["productModal","saleModal"].some(id=>{
     return !document.getElementById(id).classList.contains("hidden");
