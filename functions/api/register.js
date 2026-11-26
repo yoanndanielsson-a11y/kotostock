@@ -37,6 +37,10 @@ async function sha256(value) {
     .join("");
 }
 
+function normalize(value) {
+  return value.trim().normalize("NFKC").toLowerCase();
+}
+
 function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
     status,
@@ -49,147 +53,73 @@ function json(data, status = 200, headers = {}) {
   });
 }
 
-async function cleanupUser(env, userId) {
-  if (!userId) return;
-
-  // Supprimer les dépendances avant le compte utilisateur.
-  await env.DB.prepare(`
-    DELETE FROM sessions WHERE user_id = ?
-  `).bind(userId).run();
-
-  await env.DB.prepare(`
-    DELETE FROM subscriptions
-    WHERE shop_id IN (
-      SELECT id FROM shops WHERE user_id = ?
-    )
-  `).bind(userId).run();
-
-  await env.DB.prepare(`
-    DELETE FROM shops WHERE user_id = ?
-  `).bind(userId).run();
-
-  await env.DB.prepare(`
-    DELETE FROM users WHERE id = ?
-  `).bind(userId).run();
-}
-
 export async function onRequestPost({ request, env }) {
-  let userId = null;
-
   try {
-    // 1. Vérifier l'origine.
     const origin = request.headers.get("Origin");
     const expectedOrigin = new URL(request.url).origin;
 
     if (!origin || origin !== expectedOrigin) {
-      return json({
-        success: false,
-        message: "Requête non autorisée."
-      }, 403);
+      return json({ success: false, message: "Requête non autorisée." }, 403);
     }
 
-    // 2. Vérifier le format.
     const contentType = request.headers.get("Content-Type") || "";
 
     if (!/^application\/json(?:\s*;|$)/i.test(contentType)) {
-      return json({
-        success: false,
-        message: "Format invalide."
-      }, 415);
-    }
-
-    // 3. Limiter la taille de la requête.
-    const contentLength = Number(
-      request.headers.get("Content-Length") || 0
-    );
-
-    if (contentLength > 8192) {
-      return json({
-        success: false,
-        message: "Requête trop volumineuse."
-      }, 413);
+      return json({ success: false, message: "Format invalide." }, 415);
     }
 
     const rawBody = await request.text();
 
     if (encoder.encode(rawBody).length > 8192) {
-      return json({
-        success: false,
-        message: "Requête trop volumineuse."
-      }, 413);
+      return json({ success: false, message: "Requête trop volumineuse." }, 413);
     }
 
-    // 4. Lire les données.
     let body;
 
     try {
       body = JSON.parse(rawBody);
     } catch {
-      return json({
-        success: false,
-        message: "Données invalides."
-      }, 400);
+      return json({ success: false, message: "Données invalides." }, 400);
     }
 
     if (!body || typeof body !== "object" || Array.isArray(body)) {
-      return json({
-        success: false,
-        message: "Données invalides."
-      }, 400);
+      return json({ success: false, message: "Données invalides." }, 400);
     }
 
     const firstName = String(body.firstName || "").trim();
     const lastName = String(body.lastName || "").trim();
-    const email = String(body.email || "").trim().toLowerCase();
-    const password = String(body.password || "");
+    const secretCode = String(body.secretCode || "");
 
-    // 5. Vérifier les champs.
-    if (!firstName || !lastName || !email || !password) {
-      return json({
-        success: false,
-        message: "Tous les champs sont obligatoires."
-      }, 400);
+    if (!firstName || !lastName || !secretCode) {
+      return json({ success: false, message: "Tous les champs sont obligatoires." }, 400);
     }
 
     if (firstName.length > 80 || lastName.length > 80) {
+      return json({ success: false, message: "Nom ou prénom trop long." }, 400);
+    }
+
+    if (secretCode.length < 12 || secretCode.length > 128) {
       return json({
         success: false,
-        message: "Nom ou prénom trop long."
+        message: "Le code secret doit contenir entre 12 et 128 caractères."
       }, 400);
     }
 
-    if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
-      email.length > 254
-    ) {
-      return json({
-        success: false,
-        message: "Adresse e-mail invalide."
-      }, 400);
-    }
+    const firstNameKey = normalize(firstName);
+    const lastNameKey = normalize(lastName);
 
-    if (password.length < 12 || password.length > 128) {
-      return json({
-        success: false,
-        message: "Le mot de passe doit contenir entre 12 et 128 caractères."
-      }, 400);
-    }
-
-    // 6. Vérifier si l'adresse existe déjà.
     const existing = await env.DB.prepare(`
-      SELECT id FROM users WHERE email = ? LIMIT 1
-    `).bind(email).first();
+      SELECT id FROM users
+      WHERE first_name_key = ? AND last_name_key = ?
+      LIMIT 1
+    `).bind(firstNameKey, lastNameKey).first();
 
-    if (existing) {
-      return json({
-        success: false,
-        message: "Cette adresse e-mail est déjà utilisée."
-      }, 409);
-    }
+    // Plusieurs comptes avec les mêmes nom et prénom sont autorisés.
+    // L'identification se fera avec le code secret à la connexion.
+    // On ne bloque donc pas la création sur cette seule correspondance.
 
-    // 7. Hacher le mot de passe.
     const salt = crypto.getRandomValues(new Uint8Array(16));
-    const passwordHash = await hashPassword(password, salt);
+    const passwordHash = await hashPassword(secretCode, salt);
 
     const saltHex = Array.from(salt)
       .map(b => b.toString(16).padStart(2, "0"))
@@ -197,36 +127,33 @@ export async function onRequestPost({ request, env }) {
 
     const storedHash = `${saltHex}:${passwordHash}`;
 
-    // 8. Créer l'utilisateur.
     const userResult = await env.DB.prepare(`
       INSERT INTO users (
         first_name,
         last_name,
-        email,
+        first_name_key,
+        last_name_key,
         password_hash
       )
-      VALUES (?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?)
     `).bind(
       firstName,
       lastName,
-      email,
+      firstNameKey,
+      lastNameKey,
       storedHash
     ).run();
 
-    userId = userResult.meta.last_row_id;
+    const userId = userResult.meta.last_row_id;
 
     if (!userId) {
       throw new Error("Identifiant utilisateur indisponible.");
     }
 
-    // 9. Créer la boutique.
     const shopResult = await env.DB.prepare(`
       INSERT INTO shops (user_id, name)
       VALUES (?, ?)
-    `).bind(
-      userId,
-      `Boutique de ${firstName}`
-    ).run();
+    `).bind(userId, `Boutique de ${firstName}`).run();
 
     const shopId = shopResult.meta.last_row_id;
 
@@ -234,26 +161,16 @@ export async function onRequestPost({ request, env }) {
       throw new Error("Identifiant boutique indisponible.");
     }
 
-    // 10. Créer l'essai gratuit de trois jours.
     const trialEnd = new Date(
       Date.now() + 3 * 24 * 60 * 60 * 1000
     ).toISOString();
 
     await env.DB.prepare(`
-      INSERT INTO subscriptions (
-        shop_id,
-        plan,
-        status,
-        trial_ends_at
-      )
+      INSERT INTO subscriptions (shop_id, plan, status, trial_ends_at)
       VALUES (?, 'trial', 'trial', ?)
     `).bind(shopId, trialEnd).run();
 
-    // 11. Créer la session.
-    const tokenBytes = crypto.getRandomValues(
-      new Uint8Array(32)
-    );
-
+    const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
     const token = Array.from(tokenBytes)
       .map(b => b.toString(16).padStart(2, "0"))
       .join("");
@@ -269,44 +186,17 @@ export async function onRequestPost({ request, env }) {
       VALUES (?, ?, ?)
     `).bind(userId, tokenHash, expiresAt).run();
 
-    // 12. Répondre avec le cookie sécurisé.
     return json({
       success: true,
       message: "Compte créé avec succès.",
-      user: {
-        firstName,
-        lastName,
-        email
-      }
+      user: { firstName, lastName }
     }, 201, {
       "Set-Cookie":
         `koto_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=604800`
     });
 
   } catch (error) {
-    // Nettoyer les données créées si l'inscription échoue.
-    if (userId) {
-      try {
-        await cleanupUser(env, userId);
-      } catch (cleanupError) {
-        console.error(
-          "Erreur de nettoyage après inscription:",
-          cleanupError
-        );
-      }
-    }
-
-    // Gérer une inscription concurrente avec le même e-mail.
-    if (
-      error?.message?.includes("UNIQUE constraint failed: users.email")
-    ) {
-      return json({
-        success: false,
-        message: "Cette adresse e-mail est déjà utilisée."
-      }, 409);
-    }
-
-    console.error("Erreur d'inscription KotoStock:", error);
+    console.error("Erreur inscription KotoStock:", error);
 
     return json({
       success: false,
