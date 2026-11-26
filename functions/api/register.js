@@ -142,6 +142,7 @@ export async function onRequestPost({ request, env }) {
 
     const storedHash = `${saltHex}:${passwordHash}`;
 
+    // Création du compte
     const userResult = await env.DB.prepare(`
       INSERT INTO users (
         first_name,
@@ -165,6 +166,16 @@ export async function onRequestPost({ request, env }) {
       throw new Error("Identifiant utilisateur indisponible.");
     }
 
+    // Génération de l'identifiant public unique
+    const publicId = `KT-${String(userId).padStart(6, "0")}`;
+
+    await env.DB.prepare(`
+      UPDATE users
+      SET public_id = ?
+      WHERE id = ?
+    `).bind(publicId, userId).run();
+
+    // Création de la boutique
     const shopResult = await env.DB.prepare(`
       INSERT INTO shops (user_id, name)
       VALUES (?, ?)
@@ -176,6 +187,7 @@ export async function onRequestPost({ request, env }) {
       throw new Error("Identifiant boutique indisponible.");
     }
 
+    // Essai gratuit de 3 jours
     const trialEnd = new Date(
       Date.now() + 3 * 24 * 60 * 60 * 1000
     ).toISOString();
@@ -185,7 +197,9 @@ export async function onRequestPost({ request, env }) {
       VALUES (?, 'trial', 'trial', ?)
     `).bind(shopId, trialEnd).run();
 
+    // Création de la session
     const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+
     const token = Array.from(tokenBytes)
       .map(b => b.toString(16).padStart(2, "0"))
       .join("");
@@ -204,7 +218,11 @@ export async function onRequestPost({ request, env }) {
     return json({
       success: true,
       message: "Compte créé avec succès.",
-      user: { firstName, lastName }
+      user: {
+        firstName,
+        lastName,
+        publicId
+      }
     }, 201, {
       "Set-Cookie":
         `koto_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=604800`
@@ -215,8 +233,7 @@ export async function onRequestPost({ request, env }) {
 
     return json({
       success: false,
-      message: "Erreur lors de l'inscription.",
-      error: error.message || String(error)
+      message: "Erreur lors de l'inscription."
     }, 500);
   }
 }
