@@ -36,6 +36,10 @@ function getSessionToken(request) {
 
 export async function getAuthenticatedUser(request, env) {
   try {
+    if (!env.DB) {
+      return null;
+    }
+
     const token = getSessionToken(request);
 
     if (!token) {
@@ -50,7 +54,7 @@ export async function getAuthenticatedUser(request, env) {
         u.id AS user_id,
         u.first_name,
         u.last_name,
-        u.email,
+        u.public_id,
         s.id AS shop_id,
         s.name AS shop_name
       FROM sessions se
