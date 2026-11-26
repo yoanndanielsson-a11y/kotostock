@@ -55,23 +55,36 @@ function json(data, status = 200, headers = {}) {
 
 export async function onRequestPost({ request, env }) {
   try {
+    if (!env.DB) {
+      throw new Error("La base de données DB n'est pas configurée.");
+    }
+
     const origin = request.headers.get("Origin");
     const expectedOrigin = new URL(request.url).origin;
 
     if (!origin || origin !== expectedOrigin) {
-      return json({ success: false, message: "Requête non autorisée." }, 403);
+      return json({
+        success: false,
+        message: "Requête non autorisée."
+      }, 403);
     }
 
     const contentType = request.headers.get("Content-Type") || "";
 
     if (!/^application\/json(?:\s*;|$)/i.test(contentType)) {
-      return json({ success: false, message: "Format invalide." }, 415);
+      return json({
+        success: false,
+        message: "Format invalide."
+      }, 415);
     }
 
     const rawBody = await request.text();
 
     if (encoder.encode(rawBody).length > 8192) {
-      return json({ success: false, message: "Requête trop volumineuse." }, 413);
+      return json({
+        success: false,
+        message: "Requête trop volumineuse."
+      }, 413);
     }
 
     let body;
@@ -79,11 +92,17 @@ export async function onRequestPost({ request, env }) {
     try {
       body = JSON.parse(rawBody);
     } catch {
-      return json({ success: false, message: "Données invalides." }, 400);
+      return json({
+        success: false,
+        message: "Données invalides."
+      }, 400);
     }
 
     if (!body || typeof body !== "object" || Array.isArray(body)) {
-      return json({ success: false, message: "Données invalides." }, 400);
+      return json({
+        success: false,
+        message: "Données invalides."
+      }, 400);
     }
 
     const firstName = String(body.firstName || "").trim();
@@ -91,11 +110,17 @@ export async function onRequestPost({ request, env }) {
     const secretCode = String(body.secretCode || "");
 
     if (!firstName || !lastName || !secretCode) {
-      return json({ success: false, message: "Tous les champs sont obligatoires." }, 400);
+      return json({
+        success: false,
+        message: "Tous les champs sont obligatoires."
+      }, 400);
     }
 
     if (firstName.length > 80 || lastName.length > 80) {
-      return json({ success: false, message: "Nom ou prénom trop long." }, 400);
+      return json({
+        success: false,
+        message: "Nom ou prénom trop long."
+      }, 400);
     }
 
     if (secretCode.length < 12 || secretCode.length > 128) {
@@ -107,16 +132,6 @@ export async function onRequestPost({ request, env }) {
 
     const firstNameKey = normalize(firstName);
     const lastNameKey = normalize(lastName);
-
-    const existing = await env.DB.prepare(`
-      SELECT id FROM users
-      WHERE first_name_key = ? AND last_name_key = ?
-      LIMIT 1
-    `).bind(firstNameKey, lastNameKey).first();
-
-    // Plusieurs comptes avec les mêmes nom et prénom sont autorisés.
-    // L'identification se fera avec le code secret à la connexion.
-    // On ne bloque donc pas la création sur cette seule correspondance.
 
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const passwordHash = await hashPassword(secretCode, salt);
@@ -200,7 +215,8 @@ export async function onRequestPost({ request, env }) {
 
     return json({
       success: false,
-      message: "Impossible de créer le compte pour le moment."
+      message: "Erreur lors de l'inscription.",
+      error: error.message || String(error)
     }, 500);
   }
 }
