@@ -50,10 +50,6 @@ function safeCompare(a, b) {
   return difference === 0;
 }
 
-function normalize(value) {
-  return value.trim().normalize("NFKC").toLowerCase();
-}
-
 function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
     status,
@@ -68,23 +64,36 @@ function json(data, status = 200, headers = {}) {
 
 export async function onRequestPost({ request, env }) {
   try {
+    if (!env.DB) {
+      throw new Error("Base de données indisponible.");
+    }
+
     const origin = request.headers.get("Origin");
     const expectedOrigin = new URL(request.url).origin;
 
     if (!origin || origin !== expectedOrigin) {
-      return json({ success: false, message: "Requête non autorisée." }, 403);
+      return json({
+        success: false,
+        message: "Requête non autorisée."
+      }, 403);
     }
 
     const contentType = request.headers.get("Content-Type") || "";
 
     if (!/^application\/json(?:\s*;|$)/i.test(contentType)) {
-      return json({ success: false, message: "Format invalide." }, 415);
+      return json({
+        success: false,
+        message: "Format invalide."
+      }, 415);
     }
 
     const rawBody = await request.text();
 
     if (encoder.encode(rawBody).length > 8192) {
-      return json({ success: false, message: "Requête trop volumineuse." }, 413);
+      return json({
+        success: false,
+        message: "Requête trop volumineuse."
+      }, 413);
     }
 
     let body;
@@ -92,78 +101,80 @@ export async function onRequestPost({ request, env }) {
     try {
       body = JSON.parse(rawBody);
     } catch {
-      return json({ success: false, message: "Données invalides." }, 400);
+      return json({
+        success: false,
+        message: "Données invalides."
+      }, 400);
     }
 
     if (!body || typeof body !== "object" || Array.isArray(body)) {
-      return json({ success: false, message: "Données invalides." }, 400);
+      return json({
+        success: false,
+        message: "Données invalides."
+      }, 400);
     }
 
-    const firstName = String(body.firstName || "").trim();
-    const lastName = String(body.lastName || "").trim();
+    const publicId = String(body.publicId || "")
+      .trim()
+      .toUpperCase();
+
     const secretCode = String(body.secretCode || "");
 
     if (
-      !firstName ||
-      !lastName ||
+      !/^KT-\d{6}$/.test(publicId) ||
       !secretCode ||
-      firstName.length > 80 ||
-      lastName.length > 80 ||
       secretCode.length > 128
     ) {
-      return json({ success: false, message: "Identifiants invalides." }, 400);
-    }
-
-    const firstNameKey = normalize(firstName);
-    const lastNameKey = normalize(lastName);
-
-    const result = await env.DB.prepare(`
-      SELECT id, first_name, last_name, password_hash
-      FROM users
-      WHERE first_name_key = ? AND last_name_key = ?
-      ORDER BY id ASC
-    `).bind(firstNameKey, lastNameKey).all();
-
-    const users = result.results || [];
-    let authenticatedUser = null;
-
-    // Vérifier les comptes correspondants sans choisir arbitrairement
-    // un compte lorsque plusieurs personnes partagent ces noms.
-    for (const user of users) {
-      if (typeof user.password_hash !== "string") continue;
-
-      const parts = user.password_hash.split(":");
-
-      if (parts.length !== 2) continue;
-
-      const [saltHex, savedHash] = parts;
-
-      if (
-        !/^[a-f0-9]{32}$/i.test(saltHex) ||
-        !/^[a-f0-9]{64}$/i.test(savedHash)
-      ) {
-        continue;
-      }
-
-      const salt = new Uint8Array(
-        saltHex.match(/.{2}/g).map(byte => parseInt(byte, 16))
-      );
-
-      const submittedHash = await hashPassword(secretCode, salt);
-
-      if (safeCompare(submittedHash, savedHash.toLowerCase())) {
-        authenticatedUser = user;
-        break;
-      }
-    }
-
-    if (!authenticatedUser) {
       return json({
         success: false,
-        message: "Nom, prénom ou code secret incorrect."
+        message: "Identifiant ou code secret invalide."
+      }, 400);
+    }
+
+    // Rechercher le compte avec son identifiant unique
+    const user = await env.DB.prepare(`
+      SELECT id, first_name, last_name, public_id, password_hash
+      FROM users
+      WHERE public_id = ?
+      LIMIT 1
+    `).bind(publicId).first();
+
+    if (!user || typeof user.password_hash !== "string") {
+      return json({
+        success: false,
+        message: "Identifiant ou code secret incorrect."
       }, 401);
     }
 
+    const parts = user.password_hash.split(":");
+
+    if (parts.length !== 2) {
+      throw new Error("Format du mot de passe invalide.");
+    }
+
+    const [saltHex, savedHash] = parts;
+
+    if (
+      !/^[a-f0-9]{32}$/i.test(saltHex) ||
+      !/^[a-f0-9]{64}$/i.test(savedHash)
+    ) {
+      throw new Error("Hash du mot de passe invalide.");
+    }
+
+    const salt = new Uint8Array(
+      saltHex.match(/.{2}/g).map(byte => parseInt(byte, 16))
+    );
+
+    const submittedHash = await hashPassword(secretCode, salt);
+
+    if (!safeCompare(submittedHash, savedHash.toLowerCase())) {
+      return json({
+        success: false,
+        message: "Identifiant ou code secret incorrect."
+      }, 401);
+    }
+
+    // Création de la session
     const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
 
     const token = Array.from(tokenBytes)
@@ -179,14 +190,15 @@ export async function onRequestPost({ request, env }) {
     await env.DB.prepare(`
       INSERT INTO sessions (user_id, token_hash, expires_at)
       VALUES (?, ?, ?)
-    `).bind(authenticatedUser.id, tokenHash, expiresAt).run();
+    `).bind(user.id, tokenHash, expiresAt).run();
 
     return json({
       success: true,
       message: "Connexion réussie.",
       user: {
-        firstName: authenticatedUser.first_name,
-        lastName: authenticatedUser.last_name
+        firstName: user.first_name,
+        lastName: user.last_name,
+        publicId: user.public_id
       }
     }, 200, {
       "Set-Cookie":
