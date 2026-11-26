@@ -52,7 +52,7 @@ export async function onRequestGet({ request, env }) {
       user: {
         firstName: account.first_name,
         lastName: account.last_name,
-        email: account.email
+        publicId: account.public_id
       },
 
       shop: {
