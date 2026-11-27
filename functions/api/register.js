@@ -1,4 +1,3 @@
-
 const encoder = new TextEncoder();
 
 async function hashPassword(password, salt) {
@@ -14,7 +13,7 @@ async function hashPassword(password, salt) {
     {
       name: "PBKDF2",
       salt,
-      iterations: 210000,
+      iterations: 100000, // maximum autorisé par Cloudflare Workers
       hash: "SHA-256"
     },
     key,
