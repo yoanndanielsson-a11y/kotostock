@@ -57,7 +57,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .app{min-height:100vh}
 .sidebar{
   position:fixed;left:0;top:0;bottom:0;width:250px;padding:25px 17px;
-  background:var(--dark);color:white;display:flex;flex-direction:column;z-index:20
+  background:var(--dark);color:white;display:flex;flex-direction:column;z-index:20;overflow-y:auto
 }
 .brand{font-size:23px;font-weight:900;padding:8px 12px 32px}
 .brand span{color:#82a5ff}
@@ -69,8 +69,9 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .nav-btn{width:100%;border:0;background:transparent;color:#c0cbe0;text-align:left;padding:13px 14px;border-radius:10px;margin-bottom:5px;font-size:14px;display:flex;gap:12px;align-items:center}
 .nav-btn:hover,.nav-btn.active{background:#315efb;color:white}
 .nav-icon{width:20px;text-align:center;font-size:17px}
-.sidebar-bottom{margin-top:auto}
+.sidebar-bottom{margin-top:auto;padding-top:20px}
 .sidebar-bottom button{color:#ffc2c2}
+.sidebar-bottom button.code-btn{color:#c0cbe0}
 .sidebar-bottom button.reset-btn{color:#ffd9a0}
 .main{margin-left:250px;min-height:100vh}
 .topbar{height:76px;background:white;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:10}
@@ -261,6 +262,9 @@ tbody tr:hover{background:#fafbff}
 
     <div class="sidebar-bottom">
       <div class="nav-label">COMPTE</div>
+      <button class="nav-btn code-btn" onclick="openCodeModal()">
+        <span class="nav-icon">🔑</span> Changer mon code secret
+      </button>
       <button class="nav-btn reset-btn" onclick="resetAllData()">
         <span class="nav-icon">↺</span> Réinitialiser les données
       </button>
@@ -449,6 +453,30 @@ tbody tr:hover{background:#fafbff}
       <div class="modal-actions">
         <button type="button" class="secondary-btn" onclick="closeModal('saleModal')">Annuler</button>
         <button type="submit" class="primary-btn" id="saveSaleBtn">Valider la vente</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL CODE SECRET -->
+<div id="codeModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>Changer mon code secret</h3>
+      <button class="close-btn" onclick="closeModal('codeModal')">✕</button>
+    </div>
+    <form id="codeForm">
+      <div class="field"><label>Ancien code secret</label>
+        <input id="currentCode" type="password" required autocomplete="current-password"></div>
+      <div class="field"><label>Nouveau code secret</label>
+        <input id="newCode" type="password" required minlength="12" autocomplete="new-password"
+               placeholder="12 caractères minimum"></div>
+      <div class="field"><label>Confirmer le nouveau code</label>
+        <input id="confirmCode" type="password" required minlength="12" autocomplete="new-password"></div>
+      <div id="codeFormMessage" class="form-message"></div>
+      <div class="modal-actions">
+        <button type="button" class="secondary-btn" onclick="closeModal('codeModal')">Annuler</button>
+        <button type="submit" class="primary-btn" id="saveCodeBtn">Modifier</button>
       </div>
     </form>
   </div>
@@ -707,7 +735,7 @@ async function refreshData(){
 
 /* SYNCHRONISATION ENTRE APPAREILS */
 function hasOpenModal(){
-  return ["productModal","saleModal"].some(id=>
+  return ["productModal","saleModal","codeModal"].some(id=>
     !document.getElementById(id).classList.contains("hidden")
   );
 }
@@ -1121,6 +1149,49 @@ function renderSales(){
     </tr>
   `).join("");
 }
+
+/* CHANGEMENT DU CODE SECRET */
+function openCodeModal(){
+  document.getElementById("codeForm").reset();
+  document.getElementById("codeFormMessage").textContent="";
+  document.getElementById("codeModal").classList.remove("hidden");
+}
+
+document.getElementById("codeForm").addEventListener("submit",async event=>{
+  event.preventDefault();
+
+  const currentCode=document.getElementById("currentCode").value;
+  const newCode=document.getElementById("newCode").value;
+  const confirmCode=document.getElementById("confirmCode").value;
+  const message=document.getElementById("codeFormMessage");
+
+  if(newCode.length<12){
+    message.textContent="Le nouveau code doit contenir au moins 12 caractères.";
+    return;
+  }
+  if(newCode!==confirmCode){
+    message.textContent="Les deux nouveaux codes ne correspondent pas.";
+    return;
+  }
+
+  const button=document.getElementById("saveCodeBtn");
+  button.disabled=true;
+  button.textContent="Modification...";
+
+  try{
+    await apiRequest("/change-code",{
+      method:"POST",
+      body:JSON.stringify({currentCode,newCode})
+    });
+    closeModal("codeModal");
+    alert("Votre code secret a été modifié.");
+  }catch(error){
+    message.textContent=error.message;
+  }finally{
+    button.disabled=false;
+    button.textContent="Modifier";
+  }
+});
 
 /* RÉINITIALISATION DES DONNÉES */
 async function resetAllData(){
