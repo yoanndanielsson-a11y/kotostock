@@ -54,10 +54,16 @@ function json(data, status = 200, headers = {}) {
 }
 
 export async function onRequestPost({ request, env }) {
+  let stage = "initialisation";
+
   try {
+    stage = "vérification de la base de données";
+
     if (!env.DB) {
       throw new Error("La base de données DB n'est pas configurée.");
     }
+
+    stage = "vérification de l'origine";
 
     const origin = request.headers.get("Origin");
     const expectedOrigin = new URL(request.url).origin;
@@ -68,6 +74,8 @@ export async function onRequestPost({ request, env }) {
         message: "Requête non autorisée."
       }, 403);
     }
+
+    stage = "lecture des données";
 
     const contentType = request.headers.get("Content-Type") || "";
 
@@ -133,6 +141,8 @@ export async function onRequestPost({ request, env }) {
     const firstNameKey = normalize(firstName);
     const lastNameKey = normalize(lastName);
 
+    stage = "préparation du code secret";
+
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const passwordHash = await hashPassword(secretCode, salt);
 
@@ -142,7 +152,8 @@ export async function onRequestPost({ request, env }) {
 
     const storedHash = `${saltHex}:${passwordHash}`;
 
-    // Création du compte
+    stage = "création de l'utilisateur";
+
     const userResult = await env.DB.prepare(`
       INSERT INTO users (
         first_name,
@@ -166,7 +177,8 @@ export async function onRequestPost({ request, env }) {
       throw new Error("Identifiant utilisateur indisponible.");
     }
 
-    // Génération de l'identifiant public unique
+    stage = "attribution de l'identifiant";
+
     const publicId = `KT-${String(userId).padStart(6, "0")}`;
 
     await env.DB.prepare(`
@@ -175,7 +187,8 @@ export async function onRequestPost({ request, env }) {
       WHERE id = ?
     `).bind(publicId, userId).run();
 
-    // Création de la boutique
+    stage = "création de la boutique";
+
     const shopResult = await env.DB.prepare(`
       INSERT INTO shops (user_id, name)
       VALUES (?, ?)
@@ -187,7 +200,8 @@ export async function onRequestPost({ request, env }) {
       throw new Error("Identifiant boutique indisponible.");
     }
 
-    // Essai gratuit de 3 jours
+    stage = "création de l'essai gratuit";
+
     const trialEnd = new Date(
       Date.now() + 3 * 24 * 60 * 60 * 1000
     ).toISOString();
@@ -197,7 +211,8 @@ export async function onRequestPost({ request, env }) {
       VALUES (?, 'trial', 'trial', ?)
     `).bind(shopId, trialEnd).run();
 
-    // Création de la session
+    stage = "création de la session";
+
     const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
 
     const token = Array.from(tokenBytes)
@@ -215,6 +230,8 @@ export async function onRequestPost({ request, env }) {
       VALUES (?, ?, ?)
     `).bind(userId, tokenHash, expiresAt).run();
 
+    stage = "terminé";
+
     return json({
       success: true,
       message: "Compte créé avec succès.",
@@ -229,11 +246,15 @@ export async function onRequestPost({ request, env }) {
     });
 
   } catch (error) {
-    console.error("Erreur inscription KotoStock:", error);
+    console.error("Erreur inscription KotoStock:", {
+      stage,
+      error: error?.message || String(error)
+    });
 
     return json({
       success: false,
-      message: "Erreur lors de l'inscription."
+      message: "Erreur lors de l'inscription.",
+      stage
     }, 500);
   }
 }
