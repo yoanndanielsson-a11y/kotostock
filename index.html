@@ -81,6 +81,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .status-pill::before{content:"";width:8px;height:8px;border-radius:50%;background:#315efb;flex-shrink:0}
 .status-pill.trial{background:#eaf8f1;color:#138356;border-color:#d5f0e2}
 .status-pill.trial::before{background:#159b68}
+.status-pill.warning{background:#fff4e3;color:#b87916;border-color:#ffe3b3}
+.status-pill.warning::before{background:#e69a25}
 .status-pill.expired{background:#fff1ed;color:#c45a35;border-color:#ffded3}
 .status-pill.expired::before{background:#df7545}
 .mobile-menu{display:none;border:0;background:#edf1fa;padding:9px;border-radius:8px}
@@ -88,6 +90,26 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .page-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:25px}
 .page-heading h1{font-size:25px;margin-bottom:5px}
 .page-heading p{color:var(--muted);font-size:13px;margin:0}
+
+/* COMPTE À REBOURS DE L'ESSAI */
+.trial-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  padding:20px 24px;border-radius:16px;margin-bottom:22px;
+  background:linear-gradient(120deg,#101b35,#1d3a7a);color:white;
+  box-shadow:var(--shadow)
+}
+.trial-banner.warning{background:linear-gradient(120deg,#7a4a0b,#c27a14)}
+.trial-banner.expired{background:linear-gradient(120deg,#6b1f1f,#b53a3a)}
+.trial-text strong{display:block;font-size:17px;margin-bottom:5px}
+.trial-text span{font-size:13px;color:#dce5ff;line-height:1.5;display:block;max-width:430px}
+.countdown{display:flex;gap:10px}
+.cd-box{
+  min-width:68px;text-align:center;padding:11px 8px;border-radius:12px;
+  background:#ffffff1c;border:1px solid #ffffff2b
+}
+.cd-box b{display:block;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.cd-box small{display:block;font-size:10px;margin-top:6px;letter-spacing:1px;text-transform:uppercase;color:#cfdcff}
+
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:17px;margin-bottom:22px}
 .stat-card{background:white;padding:21px;border-radius:16px;box-shadow:var(--shadow);border:1px solid #edf0f6}
 .stat-top{display:flex;justify-content:space-between;align-items:center}
@@ -119,7 +141,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .toolbar input,.toolbar select{border:1px solid var(--border);padding:11px 13px;border-radius:9px;background:white;outline:none}
 .toolbar input{flex:1;min-width:180px}
 .table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:650px}
+table{width:100%;border-collapse:collapse;min-width:820px}
 th{text-align:left;padding:13px 12px;background:#f7f9fd;color:#77839a;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
 td{padding:14px 12px;border-bottom:1px solid #edf0f5;font-size:13px}
 tbody tr:hover{background:#fafbff}
@@ -164,6 +186,10 @@ tbody tr:hover{background:#fafbff}
   .stat-card{padding:15px}
   .stat-card h3{font-size:21px}
   .status-pill{font-size:10px;padding:8px 10px}
+  .trial-banner{padding:16px}
+  .countdown{width:100%}
+  .cd-box{flex:1;min-width:0}
+  .cd-box b{font-size:22px}
 }
 @media(max-width:390px){
   .stats-grid{grid-template-columns:1fr 1fr}
@@ -296,6 +322,20 @@ tbody tr:hover{background:#fafbff}
           <button class="primary-btn" onclick="openSaleModal()">＋ Nouvelle vente</button>
         </div>
 
+        <!-- COMPTE À REBOURS DE L'ESSAI GRATUIT -->
+        <div id="trialBanner" class="trial-banner hidden">
+          <div class="trial-text">
+            <strong id="trialTitle">⏳ Essai gratuit en cours</strong>
+            <span id="trialSub">Temps restant avant la fin de votre essai de 3 jours.</span>
+          </div>
+          <div class="countdown" id="countdown">
+            <div class="cd-box"><b id="cdDays">00</b><small>Jours</small></div>
+            <div class="cd-box"><b id="cdHours">00</b><small>Heures</small></div>
+            <div class="cd-box"><b id="cdMinutes">00</b><small>Min</small></div>
+            <div class="cd-box"><b id="cdSeconds">00</b><small>Sec</small></div>
+          </div>
+        </div>
+
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-top"><span class="muted small">Produits enregistrés</span><span class="stat-icon blue">▤</span></div>
@@ -375,8 +415,8 @@ tbody tr:hover{background:#fafbff}
             <table>
               <thead>
                 <tr>
-                  <th>Produit</th><th>Catégorie</th><th>Prix de vente</th>
-                  <th>Quantité</th><th>État du stock</th><th>Actions</th>
+                  <th>Produit</th><th>Catégorie</th><th>Prix d'achat</th><th>Prix de vente</th>
+                  <th>Marge / unité</th><th>Quantité</th><th>État du stock</th><th>Actions</th>
                 </tr>
               </thead>
               <tbody id="productsTable"></tbody>
@@ -427,6 +467,7 @@ tbody tr:hover{background:#fafbff}
       <input id="productId" type="hidden">
       <div class="field"><label>Nom du produit</label><input id="productName" required placeholder="Ex : Riz, huile, savon..."></div>
       <div class="field"><label>Catégorie</label><input id="productCategory" placeholder="Ex : Alimentation"></div>
+      <div class="field"><label>Prix d'achat (FCFA)</label><input id="productPurchase" type="number" min="0" step="1" placeholder="Ce que le produit vous coûte"></div>
       <div class="field"><label>Prix de vente (FCFA)</label><input id="productPrice" type="number" min="0" step="1" required></div>
       <div class="field"><label>Quantité en stock</label><input id="productQuantity" type="number" min="0" step="1" required></div>
       <div id="productFormMessage" class="form-message"></div>
@@ -499,6 +540,9 @@ let currentPage="dashboard";
 let refreshInProgress=false;
 let syncTimer=null;
 
+let countdownTimer=null;
+let trialEndMs=NaN;
+
 const money=value=>new Intl.NumberFormat("fr-FR").format(Number(value||0))+" FCFA";
 
 const escapeHTML=value=>String(value??"").replace(/[&<>"']/g,char=>({
@@ -506,6 +550,7 @@ const escapeHTML=value=>String(value??"").replace(/[&<>"']/g,char=>({
 })[char]);
 
 function getProductPrice(product){return Number(product.sale_price??product.salePrice??0)}
+function getProductPurchase(product){return Number(product.purchase_price??0)}
 function getProductQuantity(product){return Number(product.quantity??0)}
 function getProductName(product){return product.name??"Produit sans nom"}
 function getSaleTotal(sale){return Number(sale.total??sale.amount??0)}
@@ -643,6 +688,7 @@ document.getElementById("registerForm").addEventListener("submit",async event=>{
 
 async function logout(){
   stopAutoSync();
+  stopCountdown();
   try{await apiRequest("/logout",{method:"POST"})}catch(error){}
 
   currentUser=null;
@@ -664,6 +710,7 @@ async function checkSession(){
     await loadApplication();
   }catch(error){
     stopAutoSync();
+    stopCountdown();
     document.getElementById("authPage").classList.remove("hidden");
     document.getElementById("appPage").classList.add("hidden");
   }
@@ -748,6 +795,7 @@ async function automaticSync(){
   }catch(error){
     if(error.status===401){
       stopAutoSync();
+      stopCountdown();
       currentUser=null;
       currentShop=null;
       currentSubscription=null;
@@ -776,40 +824,106 @@ function stopAutoSync(){
 }
 
 document.addEventListener("visibilitychange",()=>{
-  if(!document.hidden)automaticSync();
+  if(!document.hidden){
+    automaticSync();
+    if(Number.isFinite(trialEndMs))tickCountdown();
+  }
 });
 
 window.addEventListener("focus",()=>automaticSync());
 
-/* ABONNEMENT */
+/* ABONNEMENT ET COMPTE À REBOURS DE L'ESSAI */
+function parseUtc(value){
+  if(!value)return NaN;
+  const text=String(value);
+  return new Date(
+    text.includes("Z")||text.includes("+")?text:text.replace(" ","T")+"Z"
+  ).getTime();
+}
+
+function pad(number){return String(number).padStart(2,"0")}
+
+function stopCountdown(){
+  if(countdownTimer){
+    clearInterval(countdownTimer);
+    countdownTimer=null;
+  }
+}
+
 function updateSubscriptionLabel(){
+  stopCountdown();
+
   const status=document.getElementById("subscriptionStatus");
-  const trialEnd=currentSubscription.trial_ends_at||currentSubscription.trialEndsAt;
+  const banner=document.getElementById("trialBanner");
   const state=String(currentSubscription.status||currentSubscription.plan||"").toLowerCase();
 
   status.className="status-pill";
 
-  if(trialEnd){
-    const endDate=new Date(
-      trialEnd.includes?.("Z")||trialEnd.includes?.("+")
-        ?trialEnd:trialEnd.replace(" ","T")+"Z"
-    );
-
-    if(!Number.isNaN(endDate.getTime())){
-      const remaining=Math.ceil((endDate.getTime()-Date.now())/86400000);
-
-      if(remaining>0){
-        status.classList.add("trial");
-        status.textContent="Essai gratuit · "+remaining+(remaining===1?" jour restant":" jours restants");
-      }else{
-        status.classList.add("expired");
-        status.textContent="Essai terminé";
-      }
-      return;
-    }
+  // Abonnement payant actif : pas de compte à rebours
+  if(state==="active"){
+    banner.classList.add("hidden");
+    status.textContent="Compte actif";
+    return;
   }
 
-  status.textContent=state==="active"?"Compte actif":"Espace KotoStock";
+  trialEndMs=parseUtc(currentSubscription.trial_ends_at||currentSubscription.trialEndsAt);
+
+  if(!Number.isFinite(trialEndMs)){
+    banner.classList.add("hidden");
+    status.textContent="Espace KotoStock";
+    return;
+  }
+
+  banner.classList.remove("hidden");
+  tickCountdown();
+  countdownTimer=setInterval(tickCountdown,1000);
+}
+
+function tickCountdown(){
+  const status=document.getElementById("subscriptionStatus");
+  const banner=document.getElementById("trialBanner");
+  const countdown=document.getElementById("countdown");
+  const title=document.getElementById("trialTitle");
+  const sub=document.getElementById("trialSub");
+
+  const diff=trialEndMs-Date.now();
+
+  // Essai terminé
+  if(diff<=0){
+    stopCountdown();
+    banner.className="trial-banner expired";
+    countdown.classList.add("hidden");
+    title.textContent="⛔ Votre essai gratuit est terminé";
+    sub.textContent="Vous pouvez toujours consulter vos produits et vos ventes, mais il faut un abonnement actif pour les modifier.";
+    status.className="status-pill expired";
+    status.textContent="Essai terminé";
+    return;
+  }
+
+  const days=Math.floor(diff/86400000);
+  const hours=Math.floor(diff%86400000/3600000);
+  const minutes=Math.floor(diff%3600000/60000);
+  const seconds=Math.floor(diff%60000/1000);
+
+  document.getElementById("cdDays").textContent=pad(days);
+  document.getElementById("cdHours").textContent=pad(hours);
+  document.getElementById("cdMinutes").textContent=pad(minutes);
+  document.getElementById("cdSeconds").textContent=pad(seconds);
+
+  countdown.classList.remove("hidden");
+
+  const lastDay=diff<86400000;
+
+  banner.className="trial-banner"+(lastDay?" warning":"");
+  title.textContent=lastDay
+    ?"⚠️ Dernières heures de votre essai gratuit"
+    :"⏳ Essai gratuit en cours";
+  sub.textContent=lastDay
+    ?"Votre essai se termine bientôt. Pensez à activer votre abonnement pour continuer à modifier vos données."
+    :"Temps restant avant la fin de votre essai gratuit de 3 jours.";
+
+  status.className="status-pill "+(lastDay?"warning":"trial");
+  status.textContent="Essai · "+(days>0?days+"j ":"")+pad(hours)+"h "+pad(minutes)+"m "+pad(seconds)+"s";
 }
 
 /* NAVIGATION */
@@ -921,6 +1035,16 @@ function stockStatus(quantity){
   return '<span class="tag">Disponible</span>';
 }
 
+function marginCell(product){
+  const sale=getProductPrice(product);
+  const purchase=getProductPurchase(product);
+  if(!purchase)return '<span class="muted small">Non renseigné</span>';
+  const margin=sale-purchase;
+  const percent=sale>0?Math.round(margin/sale*100):0;
+  const color=margin<0?"var(--red)":"var(--green)";
+  return `<strong style="color:${color}">${money(margin)}</strong><br><span class="muted small">${percent} %</span>`;
+}
+
 function renderProducts(){
   const body=document.getElementById("productsTable");
   if(!body)return;
@@ -940,7 +1064,7 @@ function renderProducts(){
   });
 
   if(!filtered.length){
-    body.innerHTML='<tr><td colspan="6" class="empty">Aucun produit trouvé.</td></tr>';
+    body.innerHTML='<tr><td colspan="8" class="empty">Aucun produit trouvé.</td></tr>';
     return;
   }
 
@@ -948,7 +1072,9 @@ function renderProducts(){
     <tr>
       <td class="product-name">${escapeHTML(getProductName(p))}</td>
       <td>${escapeHTML(p.category||"Non classé")}</td>
+      <td>${getProductPurchase(p)?money(getProductPurchase(p)):'<span class="muted small">—</span>'}</td>
       <td>${money(getProductPrice(p))}</td>
+      <td>${marginCell(p)}</td>
       <td><strong>${getProductQuantity(p)}</strong></td>
       <td>${stockStatus(getProductQuantity(p))}</td>
       <td>
@@ -979,6 +1105,7 @@ function openProductModal(product=null){
   document.getElementById("productModalTitle").textContent=product?"Modifier le produit":"Ajouter un produit";
   document.getElementById("productName").value=product?.name||"";
   document.getElementById("productCategory").value=product?.category||"";
+  document.getElementById("productPurchase").value=product?getProductPurchase(product):"";
   document.getElementById("productPrice").value=product?getProductPrice(product):"";
   document.getElementById("productQuantity").value=product?getProductQuantity(product):"";
   document.getElementById("saveProductBtn").textContent=product?"Enregistrer les modifications":"Enregistrer";
@@ -998,10 +1125,12 @@ document.getElementById("productForm").addEventListener("submit",async event=>{
     name:document.getElementById("productName").value.trim(),
     category:document.getElementById("productCategory").value.trim(),
     sale_price:Number(document.getElementById("productPrice").value),
+    purchase_price:Number(document.getElementById("productPurchase").value||0),
     quantity:Number(document.getElementById("productQuantity").value)
   };
 
   if(!payload.name||!Number.isFinite(payload.sale_price)||payload.sale_price<0||
+     !Number.isInteger(payload.purchase_price)||payload.purchase_price<0||
      !Number.isInteger(payload.quantity)||payload.quantity<0){
     document.getElementById("productFormMessage").textContent="Vérifiez les informations saisies.";
     return;
