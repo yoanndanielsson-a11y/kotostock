@@ -826,7 +826,7 @@ function stopAutoSync(){
 document.addEventListener("visibilitychange",()=>{
   if(!document.hidden){
     automaticSync();
-    if(Number.isFinite(trialEndMs))tickCountdown();
+    if(Number.isFinite(trialEndMs)&&countdownTimer)tickCountdown();
   }
 });
 
@@ -855,6 +855,9 @@ function updateSubscriptionLabel(){
 
   const status=document.getElementById("subscriptionStatus");
   const banner=document.getElementById("trialBanner");
+  const countdown=document.getElementById("countdown");
+  const title=document.getElementById("trialTitle");
+  const sub=document.getElementById("trialSub");
   const state=String(currentSubscription.status||currentSubscription.plan||"").toLowerCase();
 
   status.className="status-pill";
@@ -866,17 +869,37 @@ function updateSubscriptionLabel(){
     return;
   }
 
-  trialEndMs=parseUtc(currentSubscription.trial_ends_at||currentSubscription.trialEndsAt);
-
-  if(!Number.isFinite(trialEndMs)){
+  // Ni essai ni abonnement actif : rien à afficher
+  if(state!=="trial"){
     banner.classList.add("hidden");
     status.textContent="Espace KotoStock";
     return;
   }
 
+  trialEndMs=parseUtc(currentSubscription.trial_ends_at||currentSubscription.trialEndsAt);
+
   banner.classList.remove("hidden");
+
+  // Essai pas encore démarré (aucun produit ajouté)
+  if(!Number.isFinite(trialEndMs)){
+    banner.className="trial-banner";
+    countdown.classList.add("hidden");
+    title.textContent="🎁 Votre essai gratuit de 3 jours n'a pas encore commencé";
+    sub.textContent="Le compte à rebours démarrera dès que vous ajouterez votre premier produit.";
+    status.textContent="Essai : 3 jours offerts";
+    return;
+  }
+
   tickCountdown();
   countdownTimer=setInterval(tickCountdown,1000);
+}
+
+async function refreshSubscription(){
+  try{
+    const me=await apiRequest("/me");
+    currentSubscription=me.subscription||{};
+    updateSubscriptionLabel();
+  }catch(error){}
 }
 
 function tickCountdown(){
@@ -1147,6 +1170,7 @@ document.getElementById("productForm").addEventListener("submit",async event=>{
     });
     closeModal("productModal");
     await refreshData();
+    await refreshSubscription();
   }catch(error){
     document.getElementById("productFormMessage").textContent=error.message;
   }finally{
