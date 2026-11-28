@@ -1,7 +1,7 @@
-
 import { getAuthenticatedUser } from "./_utils/auth.js";
 
 const encoder = new TextEncoder();
+const TRIAL_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 
 function json(data, status = 200) {
   return Response.json(data, {
@@ -75,13 +75,29 @@ function validNumber(value) {
   return false;
 }
 
+// Prix d'achat facultatif : absent ou vide = 0
+function readPurchasePrice(value) {
+  if (value === undefined || value === null || value === "") {
+    return { ok: true, value: 0 };
+  }
+
+  if (!validNumber(value)) {
+    return { ok: false };
+  }
+
+  return { ok: true, value: Number(value) };
+}
+
 function subscriptionIsActive(subscription) {
   if (!subscription) return false;
 
   const now = Date.now();
 
   if (subscription.status === "trial") {
-    const end = Date.parse(subscription.trial_ends_at || "");
+    // Essai pas encore démarré : il commence au premier produit
+    if (!subscription.trial_ends_at) return true;
+
+    const end = Date.parse(subscription.trial_ends_at);
 
     return Number.isFinite(end) && end > now;
   }
@@ -122,6 +138,22 @@ async function requireActiveSubscription(env, shopId) {
   return null;
 }
 
+// Démarre l'essai de 3 jours au premier produit ajouté.
+// Ne fait rien si l'essai a déjà démarré ou si l'abonnement est payant.
+async function startTrialIfNeeded(env, shopId) {
+  const trialEnd = new Date(Date.now() + TRIAL_DURATION_MS).toISOString();
+
+  await env.DB.prepare(`
+    UPDATE subscriptions
+    SET trial_ends_at = ?
+    WHERE shop_id = ?
+      AND status = 'trial'
+      AND trial_ends_at IS NULL
+  `)
+    .bind(trialEnd, shopId)
+    .run();
+}
+
 // GET : consulter les produits de sa boutique.
 // La consultation reste possible après expiration.
 export async function onRequestGet({ request, env }) {
@@ -141,6 +173,7 @@ export async function onRequestGet({ request, env }) {
         name,
         category,
         sale_price,
+        purchase_price,
         quantity,
         created_at
       FROM products
@@ -224,9 +257,12 @@ export async function onRequestPost({ request, env }) {
       }, 400);
     }
 
+    const purchase = readPurchasePrice(body.purchase_price);
+
     if (
       !validNumber(body.sale_price) ||
-      !validNumber(body.quantity)
+      !validNumber(body.quantity) ||
+      !purchase.ok
     ) {
       return json({
         success: false,
@@ -240,18 +276,23 @@ export async function onRequestPost({ request, env }) {
         name,
         category,
         sale_price,
+        purchase_price,
         quantity
       )
-      VALUES (?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?)
     `)
       .bind(
         user.shop_id,
         name,
         category || null,
         Number(body.sale_price),
+        purchase.value,
         Number(body.quantity)
       )
       .run();
+
+    // Premier produit ajouté : l'essai de 3 jours démarre ici
+    await startTrialIfNeeded(env, user.shop_id);
 
     return json({
       success: true,
@@ -315,6 +356,8 @@ export async function onRequestPut({ request, env }) {
       ? body.category.trim()
       : "";
 
+    const purchase = readPurchasePrice(body.purchase_price);
+
     if (
       !Number.isSafeInteger(id) ||
       id <= 0 ||
@@ -322,7 +365,8 @@ export async function onRequestPut({ request, env }) {
       name.length > 120 ||
       category.length > 80 ||
       !validNumber(body.sale_price) ||
-      !validNumber(body.quantity)
+      !validNumber(body.quantity) ||
+      !purchase.ok
     ) {
       return json({
         success: false,
@@ -336,6 +380,7 @@ export async function onRequestPut({ request, env }) {
         name = ?,
         category = ?,
         sale_price = ?,
+        purchase_price = ?,
         quantity = ?
       WHERE id = ? AND shop_id = ?
     `)
@@ -343,6 +388,7 @@ export async function onRequestPut({ request, env }) {
         name,
         category || null,
         Number(body.sale_price),
+        purchase.value,
         Number(body.quantity),
         id,
         user.shop_id
