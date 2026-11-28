@@ -201,14 +201,12 @@ export async function onRequestPost({ request, env }) {
 
     stage = "création de l'essai gratuit";
 
-    const trialEnd = new Date(
-      Date.now() + 3 * 24 * 60 * 60 * 1000
-    ).toISOString();
-
+    // L'essai de 3 jours démarrera à l'ajout du premier produit.
+    // trial_ends_at reste vide (NULL) jusque-là.
     await env.DB.prepare(`
       INSERT INTO subscriptions (shop_id, plan, status, trial_ends_at)
-      VALUES (?, 'trial', 'trial', ?)
-    `).bind(shopId, trialEnd).run();
+      VALUES (?, 'trial', 'trial', NULL)
+    `).bind(shopId).run();
 
     stage = "création de la session";
 
