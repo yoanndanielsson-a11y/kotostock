@@ -15,7 +15,7 @@
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
-button,input,select{font:inherit}
+button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
 .muted{color:var(--muted)}
@@ -44,8 +44,9 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .auth-switch button.active{background:#e8eeff;color:var(--primary)}
 .field{margin-bottom:16px}
 .field label{display:block;font-size:13px;font-weight:bold;margin-bottom:8px}
-.field input,.field select{width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:10px;outline:none;background:#fff}
-.field input:focus,.field select:focus{border-color:var(--primary);box-shadow:0 0 0 3px #315efb18}
+.field input,.field select,.field textarea{width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:10px;outline:none;background:#fff}
+.field textarea{resize:vertical;min-height:90px}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px #315efb18}
 .primary-btn{border:0;border-radius:10px;padding:13px 18px;background:var(--primary);color:white;font-weight:bold;transition:.2s}
 .primary-btn:hover{background:var(--primary-dark)}
 .auth-submit{width:100%;margin-top:8px}
@@ -72,6 +73,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .sidebar-bottom{margin-top:auto;padding-top:20px}
 .sidebar-bottom button{color:#ffc2c2}
 .sidebar-bottom button.code-btn{color:#c0cbe0}
+.sidebar-bottom button.help-btn{color:#9be7c4}
 .sidebar-bottom button.reset-btn{color:#ffd9a0}
 .main{margin-left:250px;min-height:100vh}
 .topbar{height:76px;background:white;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:10}
@@ -154,6 +156,26 @@ tbody tr:hover{background:#fafbff}
 .icon-btn.delete{color:var(--red)}
 .empty{text-align:center;padding:35px;color:var(--muted);font-size:13px}
 
+/* BOUTON D'AIDE FLOTTANT */
+.help-fab{
+  position:fixed;right:20px;bottom:20px;z-index:30;border:0;border-radius:30px;
+  padding:13px 18px;background:#1fa855;color:white;font-weight:bold;font-size:14px;
+  box-shadow:0 10px 28px rgba(31,168,85,.4);display:flex;align-items:center;gap:8px
+}
+.help-fab:hover{background:#178a45}
+
+/* SUPPORT */
+.whatsapp-btn{
+  width:100%;border:0;border-radius:10px;padding:14px 18px;background:#1fa855;color:white;
+  font-weight:bold;font-size:14px
+}
+.whatsapp-btn:hover{background:#178a45}
+.faq-title{font-size:14px;margin:22px 0 10px}
+.faq details{border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:#fafbff}
+.faq summary{padding:12px 14px;font-weight:bold;font-size:13px;cursor:pointer}
+.faq details[open] summary{border-bottom:1px solid var(--border)}
+.faq details p{margin:0;padding:12px 14px;font-size:13px;line-height:1.6;color:#4a5670}
+
 /* MODALS */
 .modal{position:fixed;inset:0;background:#101b3580;z-index:50;display:flex;align-items:center;justify-content:center;padding:18px}
 .modal-card{background:white;width:100%;max-width:480px;padding:25px;border-radius:18px;max-height:90vh;overflow:auto;box-shadow:0 20px 70px #0003}
@@ -190,6 +212,7 @@ tbody tr:hover{background:#fafbff}
   .countdown{width:100%}
   .cd-box{flex:1;min-width:0}
   .cd-box b{font-size:22px}
+  .help-fab{right:14px;bottom:14px;padding:12px 15px}
 }
 @media(max-width:390px){
   .stats-grid{grid-template-columns:1fr 1fr}
@@ -288,6 +311,9 @@ tbody tr:hover{background:#fafbff}
 
     <div class="sidebar-bottom">
       <div class="nav-label">COMPTE</div>
+      <button class="nav-btn help-btn" onclick="openSupportModal()">
+        <span class="nav-icon">💬</span> Aide & support
+      </button>
       <button class="nav-btn code-btn" onclick="openCodeModal()">
         <span class="nav-icon">🔑</span> Changer mon code secret
       </button>
@@ -454,6 +480,9 @@ tbody tr:hover{background:#fafbff}
       </section>
     </div>
   </main>
+
+  <!-- BOUTON D'AIDE FLOTTANT -->
+  <button class="help-fab" onclick="openSupportModal()" aria-label="Aide et support">💬 Aide</button>
 </section>
 
 <!-- MODAL PRODUIT -->
@@ -523,11 +552,63 @@ tbody tr:hover{background:#fafbff}
   </div>
 </div>
 
+<!-- MODAL AIDE & SUPPORT -->
+<div id="supportModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>💬 Aide & support</h3>
+      <button class="close-btn" onclick="closeModal('supportModal')">✕</button>
+    </div>
+
+    <p class="muted small">Une question ou un problème ? Écrivez-nous sur WhatsApp. Votre identifiant est ajouté automatiquement au message pour que nous retrouvions votre compte.</p>
+
+    <div class="field">
+      <label>Votre message (facultatif)</label>
+      <textarea id="supportMessage" maxlength="500" placeholder="Décrivez votre problème ou votre question..."></textarea>
+    </div>
+
+    <button type="button" class="whatsapp-btn" onclick="contactSupport()">Écrire sur WhatsApp</button>
+
+    <h4 class="faq-title">Questions fréquentes</h4>
+    <div class="faq">
+      <details>
+        <summary>J'ai oublié mon code secret</summary>
+        <p>Contactez-nous sur WhatsApp en indiquant votre identifiant KT. Si vous vous souvenez encore de votre code, vous pouvez le modifier depuis « Changer mon code secret » dans le menu.</p>
+      </details>
+      <details>
+        <summary>J'ai perdu mon identifiant KT</summary>
+        <p>Votre identifiant (par exemple KT-000012) s'affiche sous votre nom dans le menu quand vous êtes connecté. Si vous l'avez perdu et que vous êtes déconnecté, contactez-nous avec votre prénom et votre nom.</p>
+      </details>
+      <details>
+        <summary>Comment fonctionne l'essai gratuit ?</summary>
+        <p>L'essai dure 3 jours. Le décompte démarre dès que vous ajoutez votre premier produit. Une fois terminé, vous pouvez toujours consulter vos données, mais il faut un abonnement actif pour les modifier.</p>
+      </details>
+      <details>
+        <summary>Comment ajouter un produit ?</summary>
+        <p>Allez dans « Produits & stocks » puis cliquez sur « Ajouter un produit ». Indiquez le nom, le prix de vente, la quantité en stock et, si possible, le prix d'achat pour voir votre marge.</p>
+      </details>
+      <details>
+        <summary>Comment enregistrer une vente ?</summary>
+        <p>Cliquez sur « Nouvelle vente », choisissez le produit et la quantité, puis validez. Le stock diminue automatiquement.</p>
+      </details>
+      <details>
+        <summary>Pourquoi ne puis-je pas supprimer un produit ?</summary>
+        <p>Un produit déjà vendu ne peut pas être supprimé, afin de conserver l'historique de vos ventes. Vous pouvez mettre sa quantité à 0 pour le retirer de la vente.</p>
+      </details>
+      <details>
+        <summary>À quoi sert « Réinitialiser les données » ?</summary>
+        <p>Ce bouton supprime tous vos produits et toutes vos ventes pour repartir de zéro. Votre compte et votre identifiant sont conservés. L'action est irréversible.</p>
+      </details>
+    </div>
+  </div>
+</div>
+
 <script>
 "use strict";
 
 /* CONFIGURATION */
 const API="/api";
+const SUPPORT_PHONE="2290165576303";
 
 let currentUser=null;
 let currentShop=null;
@@ -782,7 +863,7 @@ async function refreshData(){
 
 /* SYNCHRONISATION ENTRE APPAREILS */
 function hasOpenModal(){
-  return ["productModal","saleModal","codeModal"].some(id=>
+  return ["productModal","saleModal","codeModal","supportModal"].some(id=>
     !document.getElementById(id).classList.contains("hidden")
   );
 }
@@ -1345,6 +1426,34 @@ document.getElementById("codeForm").addEventListener("submit",async event=>{
     button.textContent="Modifier";
   }
 });
+
+/* AIDE & SUPPORT */
+function openSupportModal(){
+  document.getElementById("supportMessage").value="";
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("supportModal").classList.remove("hidden");
+}
+
+function contactSupport(){
+  const firstName=currentUser?.first_name||currentUser?.firstName||"";
+  const lastName=currentUser?.last_name||currentUser?.lastName||"";
+  const publicId=currentUser?.publicId||currentUser?.public_id||"Non disponible";
+  const userMessage=document.getElementById("supportMessage").value.trim();
+
+  const lines=[
+    "Bonjour KotoStock, j'ai besoin d'aide.",
+    "",
+    "Nom : "+((firstName+" "+lastName).trim()||"Non renseigné"),
+    "Identifiant : "+publicId
+  ];
+
+  if(userMessage){
+    lines.push("","Message : "+userMessage);
+  }
+
+  const url="https://wa.me/"+SUPPORT_PHONE+"?text="+encodeURIComponent(lines.join("\n"));
+  window.open(url,"_blank","noopener");
+}
 
 /* RÉINITIALISATION DES DONNÉES */
 async function resetAllData(){
